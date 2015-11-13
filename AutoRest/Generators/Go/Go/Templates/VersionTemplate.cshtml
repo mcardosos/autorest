@@ -1,0 +1,47 @@
+﻿@using System;
+@using System.Collections.Generic;
+
+@using Microsoft.Rest.Generator.Go
+@using Microsoft.Rest.Generator.Go.Templates
+@using Microsoft.Rest.Generator.Utilities
+
+@inherits Microsoft.Rest.Generator.Go.Template<Microsoft.Rest.Generator.Go.VersionTemplateModel>
+@{
+    var imports = Model.Imports;
+    var modelName = GoCodeNamer.CamelCase(Model.Name);
+}
+package @Model.PackageName
+@EmptyLine
+@Header("// ")
+
+@EmptyLine
+import (
+@foreach (var import in imports)
+{
+    @:"@(import)"
+}
+)
+@EmptyLine
+
+const (
+    major = "0"
+    minor = "4"
+    patch = "0"
+    // Always begin a "tag" with a dash (as per http://semver.org)
+    tag   = "-beta"
+
+    semVerFormat = "%s.%s.%s%s"
+    userAgentFormat = "Azure-SDK-for-Go/%s;Package arm/%s;API %s"
+)
+
+@EmptyLine
+// UserAgent returns the UserAgent string to use when sending http.Requests.
+func UserAgent() string {
+    return fmt.Sprintf(userAgentFormat, Version(), "@(Model.PackageName)", "@(Model.ApiVersion)")
+}
+
+@EmptyLine
+// Version returns the semantic version (see http://semver.org) of the client.
+func Version() string {
+    return fmt.Sprintf(semVerFormat, major, minor, patch, tag)
+}
