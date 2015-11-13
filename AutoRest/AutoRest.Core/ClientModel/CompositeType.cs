@@ -101,7 +101,8 @@ namespace Microsoft.Rest.Generator.ClientModel
         }
 
         /// <summary>
-        /// Determines whether the specified object is equal to this object based on the Name.
+        /// Determines whether the specified object is equal to this object based on the Name, BaseModelType,
+        /// and number of Properties.
         /// </summary>
         /// <param name="obj">The object to compare with this object.</param>
         /// <returns>true if the specified object is equal to this object; otherwise, false.</returns>
@@ -111,21 +112,30 @@ namespace Microsoft.Rest.Generator.ClientModel
 
             if (modelType != null)
             {
-                return modelType.Name == Name;
+                return modelType.Name == Name
+                    && modelType.BaseModelType == BaseModelType
+                    && modelType.Properties.Count == Properties.Count;
             }
 
             return false;
         }
 
         /// <summary>
-        /// Serves as a hash function based on Name.
+        /// Serves as a hash function based on Name, BaseModelType, and
+        /// number of Properties.
         /// </summary>
         /// <returns>
         /// A hash code for the current object.
         /// </returns>
         public override int GetHashCode()
         {
-            return Name == null ? 0 : Name.GetHashCode();
+            var s = (Name ?? "");
+            if (BaseModelType != null)
+            {
+                s += (BaseModelType.Name ?? "");
+            }
+            s += Properties.Count.ToString();
+            return s.GetHashCode();
         }
     }
 }

@@ -52,14 +52,20 @@ namespace Microsoft.Rest.Modeler.Swagger
                 SwaggerObject.Enum.ForEach(v => enumType.Values.Add(new EnumValue { Name = v, SerializedName = v }));
                 if (SwaggerObject.Extensions.ContainsKey(CodeGenerator.EnumObject))
                 {
-                    var enumObject = SwaggerObject.Extensions[CodeGenerator.EnumObject] as Newtonsoft.Json.Linq.JContainer;
-                    if (enumObject != null)
+                    var enumObject = SwaggerObject.Extensions[CodeGenerator.EnumObject];
+                    var enumJson = SwaggerObject.Extensions[CodeGenerator.EnumObject] as Newtonsoft.Json.Linq.JContainer;
+                    if (enumJson != null)
                     {
-                        enumType.Name= enumObject["name"].ToString();
-                        if (enumObject["modelAsString"] != null)
+                        enumType.Name = enumJson["name"].ToString();
+                        if (enumJson["modelAsString"] != null)
                         {
-                            enumType.ModelAsString = bool.Parse(enumObject["modelAsString"].ToString());
+                            enumType.ModelAsString = bool.Parse(enumJson["modelAsString"].ToString());
                         }
+                    }
+                    else if (enumObject is String)
+                    {
+                        enumType.Name = enumObject as String;
+                        enumType.ModelAsString = true;
                     }
                     enumType.SerializedName = enumType.Name;
                     if (string.IsNullOrEmpty(enumType.Name))
