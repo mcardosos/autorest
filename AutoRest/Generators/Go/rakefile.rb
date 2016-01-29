@@ -24,9 +24,9 @@ SWAGGER_VERSIONS = {
 	redis: {version: "2015-08-01"},
 	resources: {
 		authorization: {version: "2015-01-01"},
-		features: {version: "2014-08-01-preview"},
-		resources: {version: "2014-04-01-preview"},
-		subscriptions: {version: "2014-04-01-preview"}
+		features: {version: "2015-12-01"},
+		resources: {version: "2015-11-01"},
+		subscriptions: {version: "2015-11-01"}
 	},
 	scheduler: {version: "2016-01-01"},
 	search: {version: "2015-02-28"},
