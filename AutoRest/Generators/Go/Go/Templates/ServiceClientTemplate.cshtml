@@ -10,6 +10,7 @@
     var imports = Model.Imports;
     var modelName = GoCodeNamer.CamelCase(Model.Name);
 }
+@WrapComment("// ", Model.Documentation)
 package @Model.PackageName
 @EmptyLine
 @Header("// ")
@@ -32,7 +33,7 @@ const (
 )
 
 @EmptyLine
-@WrapComment("// ", Model.Documentation)
+@WrapComment("// ", Model.ClientDocumentation)
 type @(Model.ClientName) struct {
     autorest.Client
     BaseURI string

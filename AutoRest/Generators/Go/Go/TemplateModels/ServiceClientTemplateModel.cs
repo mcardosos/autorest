@@ -14,6 +14,7 @@ namespace Microsoft.Rest.Generator.Go
     {
         public readonly string BaseClient;
         public string ClientName { get; set; }
+        public string ClientDocumentation { get; set; }
         public readonly string MethodGroupName;
         public readonly string PackageName;
 
@@ -48,10 +49,9 @@ namespace Microsoft.Rest.Generator.Go
                 .OrderBy(m => m.Name)
                 .ForEach(m => MethodTemplateModels.Add(new MethodTemplateModel(m, ClientName, PackageName, new MethodScopeProvider())));
 
-            Documentation = string.Format("{0} is the {1} ", ClientName,
-                                    string.IsNullOrEmpty(Documentation)
-                                        ? string.Format("base client for {0}.", ServiceName)
-                                        : Documentation.ToSentence());
+            Documentation = string.Format("Package {0} implements the Azure ARM {1} service API version {2}.\n\n{3}", PackageName, ServiceName, ApiVersion,
+                                    !string.IsNullOrEmpty(Documentation) ? Documentation.UnwrapAnchorTags() + "." : "");
+            ClientDocumentation = string.Format("{0} is the base client for {1}.", ClientName, ServiceName);
         }
 
         public string ServiceName
