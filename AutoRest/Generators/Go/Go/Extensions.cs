@@ -95,6 +95,12 @@ namespace Microsoft.Rest.Generator.Go
             return sb.ToString();
         }
 
+        public static string UnwrapAnchorTags(this string comments)
+        {
+            string pattern = "<a\\s*.*\\shref\\s*=\\s*\"([^\"]+)\".*>";
+            return Regex.Replace(comments, pattern, "$1");
+        }
+
         /////////////////////////////////////////////////////////////////////////////////////////
         //
         // Parameter Extensions
