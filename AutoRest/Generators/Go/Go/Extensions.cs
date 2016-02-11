@@ -98,7 +98,7 @@ namespace Microsoft.Rest.Generator.Go
         public static string UnwrapAnchorTags(this string comments)
         {
             string pattern = "<a\\s*.*\\shref\\s*=\\s*\"([^\"]+)\".*>";
-            return Regex.Replace(comments, pattern, "$1");
+            return Regex.Replace(comments, pattern, "$1.");
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////
@@ -575,6 +575,11 @@ namespace Microsoft.Rest.Generator.Go
         public static bool IsPageable(this Method method)
         {
             return !string.IsNullOrEmpty(method.NextLink());
+        }
+
+        public static bool IsLongRunningOperation(this Method method)
+        {
+            return method.Extensions.ContainsKey(AzureExtensions.LongRunningExtension);
         }
 
         public static string NextLink(this Method method)

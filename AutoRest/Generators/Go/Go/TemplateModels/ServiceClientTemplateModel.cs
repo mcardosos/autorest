@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Microsoft.Rest.Generator.ClientModel;
-using Microsoft.Rest.Generator.Go;
 using Microsoft.Rest.Generator.Utilities;
 
 namespace Microsoft.Rest.Generator.Go
@@ -50,7 +49,7 @@ namespace Microsoft.Rest.Generator.Go
                 .ForEach(m => MethodTemplateModels.Add(new MethodTemplateModel(m, ClientName, PackageName, new MethodScopeProvider())));
 
             Documentation = string.Format("Package {0} implements the Azure ARM {1} service API version {2}.\n\n{3}", PackageName, ServiceName, ApiVersion,
-                                    !string.IsNullOrEmpty(Documentation) ? Documentation.UnwrapAnchorTags() + "." : "");
+                                    !string.IsNullOrEmpty(Documentation) ? Documentation.UnwrapAnchorTags() : "");
             ClientDocumentation = string.Format("{0} is the base client for {1}.", ClientName, ServiceName);
         }
 
