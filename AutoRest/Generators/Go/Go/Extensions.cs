@@ -579,7 +579,7 @@ namespace Microsoft.Rest.Generator.Go
 
         public static bool IsLongRunningOperation(this Method method)
         {
-            return method.Extensions.ContainsKey(AzureExtensions.LongRunningExtension);
+            return method.Extensions.ContainsKey(AzureExtensions.LongRunningExtension) && (bool)method.Extensions[AzureExtensions.LongRunningExtension] ;
         }
 
         public static string NextLink(this Method method)
