@@ -123,8 +123,8 @@ func (client @(Model.Owner)) @(Model.SenderMethodName)(req *http.Request) (*http
 @EmptyLine
 // @(Model.ResponderMethodName) handles the response to the @(Model.ScopedName) request. The method always
 // closes the http.Response Body.
-func (client @(Model.Owner)) @(Model.ResponderMethodName)(resp *http.Response) (@(Model.ResponderReturnSignature)) {
-    err = autorest.Respond(
+func (client @(Model.Owner)) @(Model.ResponderMethodName)(resp *http.Response) (@(Model.MethodReturnSignature)) {
+    ae = autorest.Respond(
             @(rd.EmitAsArguments()))
     @(Model.Response)
     return
