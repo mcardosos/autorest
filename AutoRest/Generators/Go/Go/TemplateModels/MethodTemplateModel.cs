@@ -87,7 +87,7 @@ namespace Microsoft.Rest.Generator.Go
         {
             get
             {
-                return !this.IsLongRunningOperation() && (this.HasReturnValue() && this.ReturnValue().Body != PrimaryType.Stream)
+                return !this.IsLongRunningOperation() && this.HasReturnValue() && this.ReturnValue().Body != PrimaryType.Stream
                     ? string.Format("result {0}, ae error", this.ReturnValue().Body.Name)
                     : "result autorest.Response, ae error";
             }
@@ -122,16 +122,6 @@ namespace Microsoft.Rest.Generator.Go
             get
             {
                 return ScopedName + "Responder";
-            }
-        }
-
-        public string ResponderReturnSignature
-        {
-            get
-            {
-                return !this.IsLongRunningOperation() && ( this.HasReturnValue() && this.ReturnValue().Body != PrimaryType.Stream ) 
-                    ? string.Format("result {0}, err error", this.ReturnValue().Body.Name)
-                    : "result autorest.Response, err error";
             }
         }
 
@@ -291,12 +281,8 @@ namespace Microsoft.Rest.Generator.Go
                 var decorators = new List<string>();
                 decorators.Add("client.ByInspecting()");
                 decorators.Add(string.Format("azure.WithErrorUnlessStatusCode({0})", string.Join(",", ResponseCodes.ToArray())));
-                if(this.IsLongRunningOperation())
-                {
-                    decorators.Add("autorest.ByUnmarshallingJSON(&result)");
-                    decorators.Add("autorest.ByClosing()");
-                }
-                else if (this.HasReturnValue())
+
+                if (!this.IsLongRunningOperation() && this.HasReturnValue())
                 {
                     if (this.ReturnValue().Body is SyntheticType)
                     {
@@ -306,10 +292,10 @@ namespace Microsoft.Rest.Generator.Go
                     {
                         decorators.Add("autorest.ByUnmarshallingJSON(&result)");
                     }
-                    if (!this.HasReturnValue() || this.ReturnValue().Body != PrimaryType.Stream)
-                    {
-                        decorators.Add("autorest.ByClosing()");
-                    }
+                }
+                if (!this.HasReturnValue() || this.ReturnValue().Body != PrimaryType.Stream)
+                {
+                    decorators.Add("autorest.ByClosing()");
                 }
                 return decorators;
             }
@@ -319,18 +305,9 @@ namespace Microsoft.Rest.Generator.Go
         {
             get
             {
-                if (this.IsLongRunningOperation())
-                {
-                    return "result = autorest.Response{Response: resp}";
-                }
-                else if (this.HasReturnValue() && this.ReturnValue().Body != PrimaryType.Stream)
-                {
-                    return "result.Response = autorest.Response{ Response: resp}";
-                }
-                else
-                {
-                    return "result.Response = resp";
-                }
+                return !this.IsLongRunningOperation() && this.HasReturnValue() && this.ReturnValue().Body != PrimaryType.Stream
+                    ? "result.Response = autorest.Response{Response: resp}"
+                    : "result.Response = resp";
             }
         }
 
