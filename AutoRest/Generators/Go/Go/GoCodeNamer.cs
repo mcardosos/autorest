@@ -6,10 +6,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
-using System.Text.RegularExpressions;
-
 using Microsoft.Rest.Generator.ClientModel;
-using Microsoft.Rest.Generator.Go;
 using Microsoft.Rest.Generator.Go.Properties;
 using Microsoft.Rest.Generator.Logging;
 using Microsoft.Rest.Generator.Utilities;
@@ -276,9 +273,7 @@ namespace Microsoft.Rest.Generator.Go
                     parameter.Name = scope.GetVariableName(parameter.Name);
                 }
 
-                if (    method.ReturnType.Body is PrimaryType
-                    ||  method.ReturnType.Body is SequenceType
-                    ||  method.ReturnType.Body is DictionaryType)
+                if (method.ReturnType.Body.IsValidBaseType())
                 {
                     SyntheticType st = new SyntheticType(method.ReturnType.Body);
                     if (syntheticTypes.Contains(st))
@@ -401,7 +396,7 @@ namespace Microsoft.Rest.Generator.Go
             _normalizedTypes[enumType] = enumType;
             
             // TODO (gosdk): Default unnamed Enumerated types to "string"
-            if (String.IsNullOrEmpty(enumType.Name))
+            if (String.IsNullOrEmpty(enumType.Name) || enumType.Values.Any(v => v == null || string.IsNullOrEmpty(v.Name)))
             {
                 enumType.Name = "string";
                 enumType.SerializedName = "string";
@@ -410,13 +405,14 @@ namespace Microsoft.Rest.Generator.Go
             {
                 enumType.SerializedName = enumType.Name;
                 enumType.Name = GetTypeName(enumType.Name);
+
+                foreach (var value in enumType.Values)
+                {
+                    value.SerializedName = value.Name;
+                    value.Name = GetEnumMemberName(value.Name);
+                }
             }
 
-            foreach (var value in enumType.Values)
-            {
-                value.SerializedName = value.Name;
-                value.Name = GetEnumMemberName(value.Name);
-            }
             return enumType;
         }
 
@@ -462,11 +458,11 @@ namespace Microsoft.Rest.Generator.Go
                 }
                 else if (primaryType == PrimaryType.Int)
                 {
-                    primaryType.Name = "int";
+                    primaryType.Name = "int32";
                 }
                 else if (primaryType == PrimaryType.Long)
                 {
-                    primaryType.Name = "int32";
+                    primaryType.Name = "int64";
                 }
                 else if (primaryType == PrimaryType.Stream)
                 {

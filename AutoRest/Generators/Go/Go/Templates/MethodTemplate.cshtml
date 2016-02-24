@@ -55,7 +55,7 @@ func (client @(Model.Owner)) @(Model.MethodSignature) (@Model.MethodReturnSignat
     @EmptyLine
     result, err = client.@(Model.ResponderMethodName)(resp)
     if err != nil {
-        ae = @(Model.AutorestError("responding to", "resp"))
+        err = @(Model.AutorestError("responding to", "resp"))
     }
 
     @EmptyLine
@@ -124,7 +124,11 @@ func (client @(Model.Owner)) @(Model.SenderMethodName)(req *http.Request) (*http
 // @(Model.ResponderMethodName) handles the response to the @(Model.ScopedName) request. The method always
 // closes the http.Response Body.
 func (client @(Model.Owner)) @(Model.ResponderMethodName)(resp *http.Response) (@(Model.MethodReturnSignature)) {
-    ae = autorest.Respond(
+    @if (!string.IsNullOrEmpty(Model.MethodReturnType))
+    {
+    @:result.Value = new(@(Model.MethodReturnType))
+    }
+    err = autorest.Respond(
             @(rd.EmitAsArguments()))
     @(Model.Response)
     return
@@ -153,7 +157,7 @@ func (client @(Model.Owner)) @(Model.ResponderMethodName)(resp *http.Response) (
     @:@EmptyLine
     @:result, err = client.@(Model.ResponderMethodName)(resp)
     @:if err != nil {
-        @:ae = @(Model.AutorestError("responding to next results request", "resp"))
+        @:err = @(Model.AutorestError("responding to next results request", "resp"))
     @:}
 
     @EmptyLine
