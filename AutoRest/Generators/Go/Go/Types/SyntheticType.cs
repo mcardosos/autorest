@@ -2,8 +2,6 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System;
-using System.Collections.Generic;
-
 using Microsoft.Rest.Generator.ClientModel;
 
 namespace Microsoft.Rest.Generator.Go
@@ -13,17 +11,17 @@ namespace Microsoft.Rest.Generator.Go
     /// </summary>
     public class SyntheticType : CompositeType
     {
+        public IType baseType;
         public SyntheticType(IType baseType)
         {
-            if (    !(baseType is PrimaryType)
-                &&  !(baseType is SequenceType)
-                &&  !(baseType is DictionaryType))
+            this.baseType = baseType;
+            if ( !baseType.IsValidBaseType() )
             {
                 throw new ArgumentException("{0} is not a valid type for SyntheticType", baseType.ToString());
             }
 
             // TODO (gosdk): Ensure the generated name does not collide with existing type names
-            IType elementType = baseType is PrimaryType
+            IType elementType = baseType is PrimaryType || baseType is PackageType || baseType is EnumType
                                 ? baseType
                                 : baseType is SequenceType
                                     ? (baseType as SequenceType).ElementType
@@ -45,11 +43,11 @@ namespace Microsoft.Rest.Generator.Go
                 }
                 else if (elementType == PrimaryType.Int)
                 {
-                    Name = "Int";
+                    Name = "Int32";
                 }
                 else if (elementType == PrimaryType.Long)
                 {
-                    Name = "Int32";
+                    Name = "Int64";
                 }
                 else if (elementType == PrimaryType.Stream)
                 {
@@ -72,6 +70,10 @@ namespace Microsoft.Rest.Generator.Go
             else if (elementType is PackageType)
             {
                 Name = (elementType as PackageType).Member;
+            }
+            else if (elementType is EnumType)
+            {
+                Name = "String";
             }
             else
             {

@@ -6,10 +6,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
-using System.Text;
 
 using Microsoft.Rest.Generator.ClientModel;
-using Microsoft.Rest.Generator.Go;
 using Microsoft.Rest.Generator.Go.Properties;
 using Microsoft.Rest.Generator.Utilities;
 
@@ -20,6 +18,7 @@ namespace Microsoft.Rest.Generator.Go
         public readonly MethodScopeProvider MethodScope;
         public readonly string Owner;
         public readonly string PackageName;
+        public string MethodReturnType = null;
 
         public MethodTemplateModel(Method source, string owner, string packageName, MethodScopeProvider methodScope)
         {
@@ -88,8 +87,8 @@ namespace Microsoft.Rest.Generator.Go
             get
             {
                 return !this.IsLongRunningOperation() && this.HasReturnValue() && this.ReturnValue().Body != PrimaryType.Stream
-                    ? string.Format("result {0}, ae error", this.ReturnValue().Body.Name)
-                    : "result autorest.Response, ae error";
+                    ? string.Format("result {0}, err error", this.ReturnValue().Body.Name)
+                    : "result autorest.Response, err error";
             }
         }
 
@@ -286,7 +285,26 @@ namespace Microsoft.Rest.Generator.Go
                 {
                     if (this.ReturnValue().Body is SyntheticType)
                     {
-                        decorators.Add("autorest.ByUnmarshallingJSON(&result.Value)");
+                        SyntheticType body = (SyntheticType)this.ReturnValue().Body;
+                        if (body.baseType is EnumType)
+                        {
+                            this.MethodReturnType = body.baseType.Name;
+                            decorators.Add(string.Format("autorest.ByUnmarshalling{0}(result.Value)", this.MethodReturnType.FirstCharToUpper()));
+                        }
+                        else if (body.baseType is PackageType)
+                        {
+                            this.MethodReturnType = body.baseType.Name;
+                            decorators.Add(string.Format("{0}.ByUnmarshalling{1}(result.Value)", this.MethodReturnType.Split('.')[0], this.MethodReturnType.Split('.')[1]));
+                        }
+                        else if (!string.IsNullOrEmpty(body.baseType.GetPrimaryType()))
+                        {
+                            this.MethodReturnType = body.baseType.GetPrimaryType();
+                            decorators.Add(string.Format("autorest.ByUnmarshalling{0}(result.Value)", this.MethodReturnType.FirstCharToUpper()));
+                        }
+                        else
+                        {
+                            decorators.Add("autorest.ByUnmarshallingJSON(&result.Value)");
+                        }
                     }
                     else if (this.ReturnValue().Body != PrimaryType.Stream)
                     {
