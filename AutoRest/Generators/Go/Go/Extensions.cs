@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-
 using Microsoft.Rest.Generator.Azure;
 using Microsoft.Rest.Generator.ClientModel;
 using Microsoft.Rest.Generator.Utilities;
@@ -39,6 +38,19 @@ namespace Microsoft.Rest.Generator.Go
             {
                 value = value.Trim();
                 return value.First().ToString().ToLowerInvariant() + (value.Length > 1 ? value.Substring(1) : "");
+            }
+        }
+
+        public static string FirstCharToUpper(this string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+            else
+            {
+                value = value.Trim();
+                return value.First().ToString().ToUpperInvariant() + (value.Length > 1 ? value.Substring(1) : "");
             }
         }
 
@@ -95,10 +107,46 @@ namespace Microsoft.Rest.Generator.Go
             return sb.ToString();
         }
 
+
+        // This function removes html anchor tags and reformats the comment text.
+        // For example, Swagger documentation text --> "This is a documentation text. For information see <a href=LINK">CONTENT.</a>"
+        // reformats to  --> "This is a documentation text. For information see CONTENT (LINK)."
         public static string UnwrapAnchorTags(this string comments)
         {
-            string pattern = "<a\\s*.*\\shref\\s*=\\s*\"([^\"]+)\".*>";
-            return Regex.Replace(comments, pattern, "$1.");
+            string pattern = "([^<>]*)<a\\s*.*\\shref\\s*=\\s*[\'\"]([^\'\"]*)[\'\"][^>]*>(.*)</a>";
+            Regex r = new Regex(pattern);
+            Match match = r.Match(comments);
+
+            if (match.Success)
+            {
+                string content = match.Groups[3].Value;
+                string link = match.Groups[2].Value;
+
+                return (".?!;:".Contains(content[content.Length - 1])
+                        ? match.Groups[1].Value + content.Substring(0, content.Length - 1) + " (" + link + ")" + content[content.Length - 1]
+                        : match.Groups[1].Value + content + " (" + link + ")");
+            }
+
+            return comments;
+        }
+
+        public static string GetPrimaryType(this IType body)
+        {
+            PrimaryType[] primaryTypes = new PrimaryType[] { PrimaryType.Boolean, PrimaryType.Int, PrimaryType.Long, PrimaryType.String,
+                                                                                    PrimaryType.Double, PrimaryType.TimeSpan };
+            for (var i = 0; i < primaryTypes.Count(); i++)
+            {
+                if(  body == primaryTypes[i] )
+                {
+                    return primaryTypes[i].ToString();
+                }
+            }
+            return null;
+        }
+
+        public static bool IsValidBaseType(this IType type)
+        {
+            return (type is PrimaryType || type is PackageType || type is SequenceType || type is DictionaryType || type is EnumType);
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////
@@ -579,7 +627,14 @@ namespace Microsoft.Rest.Generator.Go
 
         public static bool IsLongRunningOperation(this Method method)
         {
-            return method.Extensions.ContainsKey(AzureExtensions.LongRunningExtension) && (bool)method.Extensions[AzureExtensions.LongRunningExtension] ;
+            try {
+                return method.Extensions.ContainsKey(AzureExtensions.LongRunningExtension) && (bool)method.Extensions[AzureExtensions.LongRunningExtension];
+            }
+            catch(InvalidCastException e)
+            {
+                throw new Exception(string.Format(e.Message+" The value \'{0}\' for extension {1} for method {2} is invalid in Swagger. It should be boolean.",
+                            method.Extensions[AzureExtensions.LongRunningExtension], AzureExtensions.LongRunningExtension, method.Group + "." + method.Name));
+            }
         }
 
         public static string NextLink(this Method method)
