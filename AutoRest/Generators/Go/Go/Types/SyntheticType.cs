@@ -11,10 +11,8 @@ namespace Microsoft.Rest.Generator.Go
     /// </summary>
     public class SyntheticType : CompositeType
     {
-        public IType baseType;
         public SyntheticType(IType baseType)
         {
-            this.baseType = baseType;
             if ( !baseType.IsValidBaseType() )
             {
                 throw new ArgumentException("{0} is not a valid type for SyntheticType", baseType.ToString());
