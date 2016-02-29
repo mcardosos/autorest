@@ -21,6 +21,9 @@ namespace Microsoft.Rest.Generator.Go
 
         private static readonly Regex SplitPattern = new Regex(@"(\p{Lu}\p{Ll}+)");
 
+        public static List<PrimaryType> primaryTypes = new List<PrimaryType> { PrimaryType.Boolean, PrimaryType.Int, PrimaryType.Long,
+                                                                               PrimaryType.Double, PrimaryType.String, PrimaryType.TimeSpan };
+
 
         /////////////////////////////////////////////////////////////////////////////////////////
         //
@@ -43,15 +46,11 @@ namespace Microsoft.Rest.Generator.Go
 
         public static string FirstCharToUpper(this string value)
         {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                return string.Empty;
-            }
-            else
-            {
-                value = value.Trim();
-                return value.First().ToString().ToUpperInvariant() + (value.Length > 1 ? value.Substring(1) : "");
-            }
+            return string.IsNullOrWhiteSpace(value)
+                    ? string.Empty
+                    : value.First()
+                           .ToString()
+                           .ToUpperInvariant() + (value.Length > 1 ? value.Substring(1) : "");
         }
 
         public static string ToPhrase(this string value)
@@ -130,23 +129,21 @@ namespace Microsoft.Rest.Generator.Go
             return comments;
         }
 
-        public static string GetPrimaryType(this IType body)
+        public static string GetPrimaryType(this IType type)
         {
-            PrimaryType[] primaryTypes = new PrimaryType[] { PrimaryType.Boolean, PrimaryType.Int, PrimaryType.Long, PrimaryType.String,
-                                                                                    PrimaryType.Double, PrimaryType.TimeSpan };
-            for (var i = 0; i < primaryTypes.Count(); i++)
-            {
-                if(  body == primaryTypes[i] )
-                {
-                    return primaryTypes[i].ToString();
-                }
-            }
-            return null;
+            return primaryTypes.Find(i => i.Equals(type)) != null
+                            ? primaryTypes.Find(i => i.Equals(type)).ToString()
+                            : null;
         }
 
         public static bool IsValidBaseType(this IType type)
         {
             return (type is PrimaryType || type is PackageType || type is SequenceType || type is DictionaryType || type is EnumType);
+        }
+
+        public static IType GetReturnType(this SyntheticType body)
+        {
+            return body.Properties[0].Type;
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////
