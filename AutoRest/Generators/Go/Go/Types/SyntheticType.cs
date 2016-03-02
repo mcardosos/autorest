@@ -13,7 +13,7 @@ namespace Microsoft.Rest.Generator.Go
     {
         public SyntheticType(IType baseType)
         {
-            if ( !baseType.IsValidBaseType() )
+            if (!baseType.CanBeSyntheticType())
             {
                 throw new ArgumentException("{0} is not a valid type for SyntheticType", baseType.ToString());
             }
@@ -24,7 +24,7 @@ namespace Microsoft.Rest.Generator.Go
                                 : baseType is SequenceType
                                     ? (baseType as SequenceType).ElementType
                                     : (baseType as DictionaryType).ValueType;
-            
+
             if (elementType is PrimaryType)
             {
                 if (elementType == PrimaryType.Boolean)
@@ -77,7 +77,7 @@ namespace Microsoft.Rest.Generator.Go
             {
                 Name = elementType.Name;
             }
-            
+
             if (baseType is SequenceType)
             {
                 Name += "List";
@@ -86,13 +86,14 @@ namespace Microsoft.Rest.Generator.Go
             {
                 Name += "Set";
             }
-            
+
             Property p = new Property();
             p.SerializedName = "value";
             p.Name = "Value";
             p.Type = elementType;
-            
+
             Properties.Add(p);
         }
+
     }
 }
