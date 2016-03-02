@@ -44,7 +44,7 @@ namespace Microsoft.Rest.Generator.Go
             }
         }
 
-        public static string FirstCharToUpper(this string value)
+        public static string Capitalize(this string value)
         {
             return string.IsNullOrWhiteSpace(value)
                     ? string.Empty
@@ -128,24 +128,7 @@ namespace Microsoft.Rest.Generator.Go
 
             return comments;
         }
-
-        public static string GetPrimaryType(this IType type)
-        {
-            return primaryTypes.Find(i => i.Equals(type)) != null
-                            ? primaryTypes.Find(i => i.Equals(type)).ToString()
-                            : null;
-        }
-
-        public static bool IsValidBaseType(this IType type)
-        {
-            return (type is PrimaryType || type is PackageType || type is SequenceType || type is DictionaryType || type is EnumType);
-        }
-
-        public static IType GetReturnType(this SyntheticType body)
-        {
-            return body.Properties[0].Type;
-        }
-
+        
         /////////////////////////////////////////////////////////////////////////////////////////
         //
         // Parameter Extensions
@@ -324,6 +307,16 @@ namespace Microsoft.Rest.Generator.Go
         // Type Extensions
         //
         /////////////////////////////////////////////////////////////////////////////////////////
+
+        public static bool CanBeSyntheticType(this IType type)
+        {
+            return (type is PrimaryType || type is PackageType || type is SequenceType || type is DictionaryType || type is EnumType);
+        }
+
+        public static bool IsPrimitiveType(this IType type)
+        {
+            return !(type is DictionaryType || type is SequenceType);
+        }
 
         public static bool CanBeEmpty(this IType type)
         {

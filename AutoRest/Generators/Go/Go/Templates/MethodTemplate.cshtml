@@ -105,7 +105,10 @@ else
 func (client @(Model.Owner)) @(Model.SenderMethodName)(req *http.Request) (*http.Response, error) {
     @if (Model.IsLongRunningOperation())
     {
-    @:return autorest.SendWithSender(client, req, azure.DoPollForAsynchronous(autorest.DefaultPollingDuration, autorest.DefaultPollingDelay))
+        @:return autorest.SendWithSender(client,
+                                                    @:req,
+                                                    @:azure.DoPollForAsynchronous(autorest.DefaultPollingDuration, 
+                                                    @:autorest.DefaultPollingDelay))
     }
     else
     {
@@ -117,10 +120,6 @@ func (client @(Model.Owner)) @(Model.SenderMethodName)(req *http.Request) (*http
 // @(Model.ResponderMethodName) handles the response to the @(Model.ScopedName) request. The method always
 // closes the http.Response Body.
 func (client @(Model.Owner)) @(Model.ResponderMethodName)(resp *http.Response) (@(Model.MethodReturnSignature)) {
-    @if (!string.IsNullOrEmpty(Model.MethodReturnType))
-    {
-    @:result.Value = new(@(Model.MethodReturnType))
-    }
     err = autorest.Respond(
             @(rd.EmitAsArguments()))
     @(Model.Response)
