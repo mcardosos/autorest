@@ -273,7 +273,7 @@ namespace Microsoft.Rest.Generator.Go
                     parameter.Name = scope.GetVariableName(parameter.Name);
                 }
 
-                if (method.ReturnType.Body.IsValidBaseType())
+                if (method.ReturnType.Body.CanBeSyntheticType())
                 {
                     SyntheticType st = new SyntheticType(method.ReturnType.Body);
                     if (syntheticTypes.Contains(st))
