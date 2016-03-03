@@ -13,7 +13,7 @@ namespace Microsoft.Rest.Generator.Go
     {
         public SyntheticType(IType baseType)
         {
-            if (!baseType.CanBeSyntheticType())
+            if (!ShouldBeSyntheticType(baseType))
             {
                 throw new ArgumentException("{0} is not a valid type for SyntheticType", baseType.ToString());
             }
@@ -95,5 +95,9 @@ namespace Microsoft.Rest.Generator.Go
             Properties.Add(p);
         }
 
+        public static bool ShouldBeSyntheticType(IType type)
+        {
+            return (type is PrimaryType || type is PackageType || type is SequenceType || type is DictionaryType || type is EnumType);
+        }
     }
 }

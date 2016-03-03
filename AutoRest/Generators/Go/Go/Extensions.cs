@@ -21,10 +21,6 @@ namespace Microsoft.Rest.Generator.Go
 
         private static readonly Regex SplitPattern = new Regex(@"(\p{Lu}\p{Ll}+)");
 
-        public static List<PrimaryType> primaryTypes = new List<PrimaryType> { PrimaryType.Boolean, PrimaryType.Int, PrimaryType.Long,
-                                                                               PrimaryType.Double, PrimaryType.String, PrimaryType.TimeSpan };
-
-
         /////////////////////////////////////////////////////////////////////////////////////////
         //
         // General Extensions
@@ -307,11 +303,6 @@ namespace Microsoft.Rest.Generator.Go
         // Type Extensions
         //
         /////////////////////////////////////////////////////////////////////////////////////////
-
-        public static bool CanBeSyntheticType(this IType type)
-        {
-            return (type is PrimaryType || type is PackageType || type is SequenceType || type is DictionaryType || type is EnumType);
-        }
 
         public static bool IsPrimitiveType(this IType type)
         {
