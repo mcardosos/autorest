@@ -21,7 +21,6 @@ namespace Microsoft.Rest.Generator.Go
 
         private static readonly Regex SplitPattern = new Regex(@"(\p{Lu}\p{Ll}+)");
 
-
         /////////////////////////////////////////////////////////////////////////////////////////
         //
         // General Extensions
@@ -41,17 +40,13 @@ namespace Microsoft.Rest.Generator.Go
             }
         }
 
-        public static string FirstCharToUpper(this string value)
+        public static string Capitalize(this string value)
         {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                return string.Empty;
-            }
-            else
-            {
-                value = value.Trim();
-                return value.First().ToString().ToUpperInvariant() + (value.Length > 1 ? value.Substring(1) : "");
-            }
+            return string.IsNullOrWhiteSpace(value)
+                    ? string.Empty
+                    : value.First()
+                           .ToString()
+                           .ToUpperInvariant() + (value.Length > 1 ? value.Substring(1) : "");
         }
 
         public static string ToPhrase(this string value)
@@ -129,26 +124,7 @@ namespace Microsoft.Rest.Generator.Go
 
             return comments;
         }
-
-        public static string GetPrimaryType(this IType body)
-        {
-            PrimaryType[] primaryTypes = new PrimaryType[] { PrimaryType.Boolean, PrimaryType.Int, PrimaryType.Long, PrimaryType.String,
-                                                                                    PrimaryType.Double, PrimaryType.TimeSpan };
-            for (var i = 0; i < primaryTypes.Count(); i++)
-            {
-                if(  body == primaryTypes[i] )
-                {
-                    return primaryTypes[i].ToString();
-                }
-            }
-            return null;
-        }
-
-        public static bool IsValidBaseType(this IType type)
-        {
-            return (type is PrimaryType || type is PackageType || type is SequenceType || type is DictionaryType || type is EnumType);
-        }
-
+        
         /////////////////////////////////////////////////////////////////////////////////////////
         //
         // Parameter Extensions
@@ -327,6 +303,11 @@ namespace Microsoft.Rest.Generator.Go
         // Type Extensions
         //
         /////////////////////////////////////////////////////////////////////////////////////////
+
+        public static bool IsPrimitiveType(this IType type)
+        {
+            return !(type is DictionaryType || type is SequenceType);
+        }
 
         public static bool CanBeEmpty(this IType type)
         {

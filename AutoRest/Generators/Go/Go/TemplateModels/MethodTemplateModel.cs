@@ -285,26 +285,7 @@ namespace Microsoft.Rest.Generator.Go
                 {
                     if (this.ReturnValue().Body is SyntheticType)
                     {
-                        SyntheticType body = (SyntheticType)this.ReturnValue().Body;
-                        if (body.baseType is EnumType)
-                        {
-                            this.MethodReturnType = body.baseType.Name;
-                            decorators.Add(string.Format("autorest.ByUnmarshalling{0}(result.Value)", this.MethodReturnType.FirstCharToUpper()));
-                        }
-                        else if (body.baseType is PackageType)
-                        {
-                            this.MethodReturnType = body.baseType.Name;
-                            decorators.Add(string.Format("{0}.ByUnmarshalling{1}(result.Value)", this.MethodReturnType.Split('.')[0], this.MethodReturnType.Split('.')[1]));
-                        }
-                        else if (!string.IsNullOrEmpty(body.baseType.GetPrimaryType()))
-                        {
-                            this.MethodReturnType = body.baseType.GetPrimaryType();
-                            decorators.Add(string.Format("autorest.ByUnmarshalling{0}(result.Value)", this.MethodReturnType.FirstCharToUpper()));
-                        }
-                        else
-                        {
-                            decorators.Add("autorest.ByUnmarshallingJSON(&result.Value)");
-                        }
+                        decorators.Add("autorest.ByUnmarshallingJSON(&result.Value)");
                     }
                     else if (this.ReturnValue().Body != PrimaryType.Stream)
                     {

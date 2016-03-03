@@ -103,31 +103,23 @@ else
 // @(Model.SenderMethodName) sends the @(Model.ScopedName) request. The method will close the
 // http.Response Body if it receives an error.
 func (client @(Model.Owner)) @(Model.SenderMethodName)(req *http.Request) (*http.Response, error) {
-@if (Model.IsLongRunningOperation())
-{
-        @:resp, err := client.Send(req)
-	    @:if err == nil && azure.ResponseIsLongRunning(resp) {
-		        @:req, err := azure.NewAsyncPollingRequest(resp, client.Client)
-		        @:if err == nil {
-			        @:resp, err = autorest.SendWithSender(client, req,
-					@:azure.WithAsyncPolling(autorest.DefaultPollingDelay))
-		        @:}
-	    @:}
-        @:return resp, err
-  }
-  else {
-      @:return client.Send(req)
-  }
+    @if (Model.IsLongRunningOperation())
+    {
+        @:return autorest.SendWithSender(client,
+                                                    @:req,
+                                                    @:azure.DoPollForAsynchronous(autorest.DefaultPollingDuration, 
+                                                    @:autorest.DefaultPollingDelay))
+    }
+    else
+    {
+    @:return autorest.SendWithSender(client, req)
+    }
 }
 
 @EmptyLine
 // @(Model.ResponderMethodName) handles the response to the @(Model.ScopedName) request. The method always
 // closes the http.Response Body.
 func (client @(Model.Owner)) @(Model.ResponderMethodName)(resp *http.Response) (@(Model.MethodReturnSignature)) {
-    @if (!string.IsNullOrEmpty(Model.MethodReturnType))
-    {
-    @:result.Value = new(@(Model.MethodReturnType))
-    }
     err = autorest.Respond(
             @(rd.EmitAsArguments()))
     @(Model.Response)
