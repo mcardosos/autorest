@@ -303,10 +303,13 @@ namespace Microsoft.Rest.Generator.Go
         // Type Extensions
         //
         /////////////////////////////////////////////////////////////////////////////////////////
-
-        public static bool IsPrimitiveType(this IType type)
+        
+        public static bool IsStreamType(this IType body)
         {
-            return !(type is DictionaryType || type is SequenceType);
+            var r = body as SyntheticType;
+            return (r != null && (r.BaseType == PrimaryType.Stream))
+                            ? true
+                            : false;
         }
 
         public static bool CanBeEmpty(this IType type)

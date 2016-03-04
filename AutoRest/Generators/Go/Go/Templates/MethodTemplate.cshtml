@@ -119,9 +119,19 @@ func (client @(Model.Owner)) @(Model.SenderMethodName)(req *http.Request) (*http
 @EmptyLine
 // @(Model.ResponderMethodName) handles the response to the @(Model.ScopedName) request. The method always
 // closes the http.Response Body.
-func (client @(Model.Owner)) @(Model.ResponderMethodName)(resp *http.Response) (@(Model.MethodReturnSignature)) {
+func (client @(Model.Owner)) @(Model.ResponderMethodName)(resp *http.Response) (@(Model.MethodReturnSignature)) { 
+    @if (Model.ReturnValue().Body.IsStreamType())
+    {
+    @:result.Value = &resp.Body
+    }
+    else if (Model.ReturnValue().Body is SyntheticType && 
+                                    SyntheticType.IsAllowedPrimitiveType((Model.ReturnValue().Body as SyntheticType).BaseType))
+    {
+    @:result.Value = new(@((Model.ReturnValue().Body as SyntheticType).BaseType.Name))
+    }
     err = autorest.Respond(
             @(rd.EmitAsArguments()))
+
     @(Model.Response)
     return
 }
