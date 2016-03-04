@@ -19,6 +19,8 @@ namespace Microsoft.Rest.Generator.Go
             }
 
             // TODO (gosdk): Ensure the generated name does not collide with existing type names
+            BaseType = baseType;
+
             IType elementType = baseType is PrimaryType || baseType is PackageType || baseType is EnumType
                                 ? baseType
                                 : baseType is SequenceType
@@ -91,13 +93,19 @@ namespace Microsoft.Rest.Generator.Go
             p.SerializedName = "value";
             p.Name = "Value";
             p.Type = elementType;
-
             Properties.Add(p);
         }
 
+        public IType BaseType { get; set; }
+        
         public static bool ShouldBeSyntheticType(IType type)
         {
             return (type is PrimaryType || type is PackageType || type is SequenceType || type is DictionaryType || type is EnumType);
+        }
+
+        public static bool IsAllowedPrimitiveType(IType type)
+        {
+            return !(type is DictionaryType || type is SequenceType || type == PrimaryType.Stream);
         }
     }
 }

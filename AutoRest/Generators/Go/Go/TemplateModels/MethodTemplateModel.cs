@@ -18,8 +18,7 @@ namespace Microsoft.Rest.Generator.Go
         public readonly MethodScopeProvider MethodScope;
         public readonly string Owner;
         public readonly string PackageName;
-        public string MethodReturnType = null;
-
+        
         public MethodTemplateModel(Method source, string owner, string packageName, MethodScopeProvider methodScope)
         {
             this.LoadFrom(source);
@@ -86,7 +85,7 @@ namespace Microsoft.Rest.Generator.Go
         {
             get
             {
-                return !this.IsLongRunningOperation() && this.HasReturnValue() && this.ReturnValue().Body != PrimaryType.Stream
+                return !this.IsLongRunningOperation() && this.HasReturnValue()
                     ? string.Format("result {0}, err error", this.ReturnValue().Body.Name)
                     : "result autorest.Response, err error";
             }
@@ -285,14 +284,29 @@ namespace Microsoft.Rest.Generator.Go
                 {
                     if (this.ReturnValue().Body is SyntheticType)
                     {
-                        decorators.Add("autorest.ByUnmarshallingJSON(&result.Value)");
+                        var returnBodyType = this.ReturnValue().Body as SyntheticType;
+                        if (SyntheticType.IsAllowedPrimitiveType(returnBodyType.BaseType))
+                        {
+                            if (returnBodyType.BaseType is PackageType)
+                            {
+                                decorators.Add(string.Format("{0}.ByUnmarshalling{1}(result.Value)",
+                                                    ((PackageType) returnBodyType.BaseType).Package,
+                                                    ((PackageType) returnBodyType.BaseType).Member));
+                            }
+                            else
+                            {
+                                decorators.Add(string.Format("autorest.ByUnmarshalling{0}(result.Value)",
+                                                              returnBodyType.BaseType.Name.Capitalize()));
+                            }
+                        }
                     }
-                    else if (this.ReturnValue().Body != PrimaryType.Stream)
+                    else if (!this.ReturnValue().Body.IsStreamType())
                     {
                         decorators.Add("autorest.ByUnmarshallingJSON(&result)");
                     }
                 }
-                if (!this.HasReturnValue() || this.ReturnValue().Body != PrimaryType.Stream)
+
+                if (!this.HasReturnValue() || !this.ReturnValue().Body.IsStreamType())
                 {
                     decorators.Add("autorest.ByClosing()");
                 }
@@ -300,11 +314,12 @@ namespace Microsoft.Rest.Generator.Go
             }
         }
 
+
         public string Response
         {
             get
             {
-                return !this.IsLongRunningOperation() && this.HasReturnValue() && this.ReturnValue().Body != PrimaryType.Stream
+                return !this.IsLongRunningOperation() && this.HasReturnValue()
                     ? "result.Response = autorest.Response{Response: resp}"
                     : "result.Response = resp";
             }
