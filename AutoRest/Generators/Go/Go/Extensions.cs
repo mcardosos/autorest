@@ -303,7 +303,7 @@ namespace Microsoft.Rest.Generator.Go
         // Type Extensions
         //
         /////////////////////////////////////////////////////////////////////////////////////////
-        
+
         public static bool IsStreamType(this IType body)
         {
             var r = body as SyntheticType;
@@ -318,6 +318,7 @@ namespace Microsoft.Rest.Generator.Go
             var interfaceType = type as InterfaceType;
             var primaryType = type as PrimaryType;
             var sequenceType = type as SequenceType;
+            var enumType = type as EnumType;
 
             return dictionaryType != null
                 || interfaceType !=  null
@@ -325,7 +326,8 @@ namespace Microsoft.Rest.Generator.Go
                     && (    primaryType == PrimaryType.ByteArray
                         ||  primaryType == PrimaryType.Stream
                         ||  primaryType == PrimaryType.String))
-                || sequenceType != null;
+                || sequenceType != null
+                || enumType != null;
         }
 
         public static bool CanBeNull(this IType type)

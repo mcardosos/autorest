@@ -21,78 +21,65 @@ namespace Microsoft.Rest.Generator.Go
             // TODO (gosdk): Ensure the generated name does not collide with existing type names
             BaseType = baseType;
 
-            IType elementType = baseType is PrimaryType || baseType is PackageType || baseType is EnumType
-                                ? baseType
-                                : baseType is SequenceType
-                                    ? (baseType as SequenceType).ElementType
-                                    : (baseType as DictionaryType).ValueType;
+            IType elementType = getElementType(baseType);
 
             if (elementType is PrimaryType)
             {
                 if (elementType == PrimaryType.Boolean)
                 {
-                    Name = "Bool";
+                    Name += "Bool";
                 }
                 else if (elementType == PrimaryType.ByteArray)
                 {
-                    Name = "ByteArray";
+                    Name += "ByteArray";
                 }
                 else if (elementType == PrimaryType.Double)
                 {
-                    Name = "Float64";
+                    Name += "Float64";
                 }
                 else if (elementType == PrimaryType.Int)
                 {
-                    Name = "Int32";
+                    Name += "Int32";
                 }
                 else if (elementType == PrimaryType.Long)
                 {
-                    Name = "Int64";
+                    Name += "Int64";
                 }
                 else if (elementType == PrimaryType.Stream)
                 {
-                    Name = "ReadCloser";
+                    Name += "ReadCloser";
                 }
                 else if (elementType == PrimaryType.String)
                 {
-                    Name = "String";
+                    Name += "String";
                 }
                 else if (elementType == PrimaryType.TimeSpan)
                 {
-                    Name = "TimeSpan";
+                    Name += "TimeSpan";
                 }
 
             }
             else if (elementType is InterfaceType)
             {
-                Name = "Object";
+                Name += "Object";
             }
             else if (elementType is PackageType)
             {
-                Name = (elementType as PackageType).Member;
+                Name += (elementType as PackageType).Member;
             }
             else if (elementType is EnumType)
             {
-                Name = "String";
+                Name += "String";
             }
             else
             {
-                Name = elementType.Name;
-            }
-
-            if (baseType is SequenceType)
-            {
-                Name += "List";
-            }
-            else if (baseType is DictionaryType)
-            {
-                Name += "Set";
+                Name += elementType.Name;
             }
 
             Property p = new Property();
             p.SerializedName = "value";
             p.Name = "Value";
-            p.Type = elementType;
+            p.Type = baseType;
             Properties.Add(p);
         }
 
@@ -106,6 +93,24 @@ namespace Microsoft.Rest.Generator.Go
         public static bool IsAllowedPrimitiveType(IType type)
         {
             return !(type is DictionaryType || type is SequenceType || type == PrimaryType.Stream);
+        }
+
+        public IType getElementType(IType type)
+        {
+            if (type is SequenceType)
+            {
+                Name += "List";
+                return getElementType((type as SequenceType).ElementType);
+            }
+            else if (type is MapType)
+            {
+                Name += "Set";
+                return getElementType(((type as MapType).ValueType));
+            }
+            else
+            {
+                return type;
+            }
         }
     }
 }
