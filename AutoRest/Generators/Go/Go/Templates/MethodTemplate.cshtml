@@ -90,11 +90,15 @@ func (client @(Model.Owner)) @(Model.PreparerMethodName)(@(Model.MethodParameter
         @:preparer = autorest.DecoratePreparer(preparer,
                             @:@(string.Format("autorest.WithJSON({0})", Model.BodyParameter.SerializedName)))
     @:}
-    @:return preparer.Prepare(&http.Request{})
+    @:@(Model.IsLongRunningOperation()
+                      ? "return preparer.Prepare(&http.Request{Cancel: cancel})"
+                      : "return preparer.Prepare(&http.Request{})")
 }
 else
 {
-    @:return autorest.Prepare(&http.Request{},
+    @:@(Model.IsLongRunningOperation()
+                      ? "return autorest.Prepare(&http.Request{Cancel: cancel}, "
+                      : "return autorest.Prepare(&http.Request{},")
                 @:@(pd.EmitAsArguments()))
 }
 }
@@ -107,8 +111,7 @@ func (client @(Model.Owner)) @(Model.SenderMethodName)(req *http.Request) (*http
     {
         @:return autorest.SendWithSender(client,
                                                     @:req,
-                                                    @:azure.DoPollForAsynchronous(autorest.DefaultPollingDuration, 
-                                                    @:autorest.DefaultPollingDelay))
+                                                    @:azure.DoPollForAsynchronous(client.PollingDelay))
     }
     else
     {
@@ -123,11 +126,6 @@ func (client @(Model.Owner)) @(Model.ResponderMethodName)(resp *http.Response) (
     @if (Model.ReturnValue().Body.IsStreamType())
     {
     @:result.Value = &resp.Body
-    }
-    else if (Model.ReturnValue().Body is SyntheticType && 
-                                    SyntheticType.IsAllowedPrimitiveType((Model.ReturnValue().Body as SyntheticType).BaseType))
-    {
-    @:result.Value = new(@((Model.ReturnValue().Body as SyntheticType).BaseType.Name))
     }
     err = autorest.Respond(
             @(rd.EmitAsArguments()))
