@@ -18,7 +18,10 @@ namespace Microsoft.Rest.Generator.Go
         public readonly MethodScopeProvider MethodScope;
         public readonly string Owner;
         public readonly string PackageName;
-        
+
+        private readonly string lroDescription = " This method may poll for completion. Polling can be canceled by passing the cancel channel argument. " +
+                                                 "The channel will be used to cancel polling and any outstanding HTTP requests.";
+
         public MethodTemplateModel(Method source, string owner, string packageName, MethodScopeProvider methodScope)
         {
             this.LoadFrom(source);
@@ -39,6 +42,11 @@ namespace Microsoft.Rest.Generator.Go
             if (string.IsNullOrEmpty(Description))
             {
                 Description = string.Format("sends the {0} request.", ScopedName.ToPhrase());
+            }
+
+            if (this.IsLongRunningOperation())
+            {
+                Description += lroDescription;
             }
         }
 
@@ -76,7 +84,11 @@ namespace Microsoft.Rest.Generator.Go
                                                         p.IsRequired || p.Type.CanBeEmpty()
                                                             ? "{0} {1}"
                                                             : "{0} *{1}", p.Name, p.Type.Name)));
-
+                //for Cancelation channel option for long-running operations
+                if (this.IsLongRunningOperation())
+                {
+                    declarations.Add("cancel <-chan struct{}");
+                }
                 return string.Join(", ", declarations);
             }
         }
@@ -130,6 +142,10 @@ namespace Microsoft.Rest.Generator.Go
                 List<string> invocationParams = new List<string>();
                 LocalParameters
                     .ForEach(p => invocationParams.Add(p.Name));
+                if (this.IsLongRunningOperation())
+                {
+                    invocationParams.Add("cancel");
+                }
                 return string.Join(", ", invocationParams);
             }
         }
@@ -284,21 +300,7 @@ namespace Microsoft.Rest.Generator.Go
                 {
                     if (this.ReturnValue().Body is SyntheticType)
                     {
-                        var returnBodyType = this.ReturnValue().Body as SyntheticType;
-                        if (SyntheticType.IsAllowedPrimitiveType(returnBodyType.BaseType))
-                        {
-                            if (returnBodyType.BaseType is PackageType)
-                            {
-                                decorators.Add(string.Format("{0}.ByUnmarshalling{1}(result.Value)",
-                                                    ((PackageType) returnBodyType.BaseType).Package,
-                                                    ((PackageType) returnBodyType.BaseType).Member));
-                            }
-                            else
-                            {
-                                decorators.Add(string.Format("autorest.ByUnmarshalling{0}(result.Value)",
-                                                              returnBodyType.BaseType.Name.Capitalize()));
-                            }
-                        }
+                        decorators.Add("autorest.ByUnmarshallingJSON(&result.Value)");
                     }
                     else if (!this.ReturnValue().Body.IsStreamType())
                     {

@@ -426,9 +426,17 @@ namespace Microsoft.Rest.Generator.Go
             {
                 return new PackageType { Import = "github.com/Azure/go-autorest/autorest/date", Member = "Date" };
             }
+            else if (primaryType == PrimaryType.DateTimeRfc1123)
+            {
+                return new PackageType { Import = "github.com/Azure/go-autorest/autorest/date", Member = "TimeRFC1123" };
+            }
             else if (primaryType == PrimaryType.DateTime)
             {
                 return new PackageType { Import = "github.com/Azure/go-autorest/autorest/date", Member = "Time" };
+            }
+            else if (primaryType == PrimaryType.Decimal)
+            {
+                return new PackageType { Import = "github.com/shopspring/decimal", Member = "Decimal" };
             }
             else
             {
@@ -442,15 +450,6 @@ namespace Microsoft.Rest.Generator.Go
                 else if (primaryType == PrimaryType.ByteArray)
                 {
                     primaryType.Name = "[]byte";
-                }
-                else if (primaryType == PrimaryType.DateTimeRfc1123)
-                {
-                    // TODO (gosdk): Consider support for DateTimeRFC1123
-                    throw new ArgumentException("Illegal primary type for Go: " + primaryType.ToString());
-                }
-                else if (primaryType == PrimaryType.Decimal)
-                {
-                    throw new ArgumentException("Illegal primary type for Go: " + primaryType.ToString());
                 }
                 else if (primaryType == PrimaryType.Double)
                 {
