@@ -189,14 +189,11 @@ namespace Microsoft.Rest.Generator.Go
                 ? "client." + GoCodeNamer.PascalCase(parameter.Name)
                 : parameter.Name;
 
-            if (parameter.RequiresUrlEncoding())
-            {
-                value = string.Format(
-                            parameter.Type as PrimaryType != null && (parameter.Type as PrimaryType).Equals(PrimaryType.String)
-                                ? "url.QueryEscape({0})"
-                                : "url.QueryEscape(string({0}))", value);
-            }
-            return value;
+            return string.Format(
+                       parameter.RequiresUrlEncoding()
+                                   ? "autorest.EncodeURI(autorest.Stringify({0}))"
+                                   : "autorest.Stringify({0})", 
+                       value);
         }
 
         public static IEnumerable<Parameter> ByLocation(this IEnumerable<Parameter> parameters, ParameterLocation location)
