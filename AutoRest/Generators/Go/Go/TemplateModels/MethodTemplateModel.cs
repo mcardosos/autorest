@@ -330,8 +330,8 @@ namespace Microsoft.Rest.Generator.Go
         public string AutorestError(string phase, string response = null)
         {
             return string.IsNullOrEmpty(response)
-                    ? string.Format("autorest.NewErrorWithError(err, \"{0}/{1}\", \"{2}\", nil , \"Failure {3} request\")", PackageName, Owner, ScopedName, phase)
-                    : string.Format("autorest.NewErrorWithError(err, \"{0}/{1}\", \"{2}\", {3}, \"Failure {4} request\")", PackageName, Owner, ScopedName, response, phase);
+                     ? string.Format("autorest.NewErrorWithError(err, \"{0}.{1}\", \"{2}\", nil , \"Failure {3} request\")", PackageName, Owner, ScopedName, phase)
+                     : string.Format("autorest.NewErrorWithError(err, \"{0}.{1}\", \"{2}\", {3}, \"Failure {4} request\")", PackageName, Owner, ScopedName, response, phase);
         }
     }
 }
