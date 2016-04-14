@@ -1,5 +1,6 @@
 ﻿@using System;
 @using System.Collections.Generic;
+@using System.Linq
 
 @using Microsoft.Rest.Generator.Go
 @using Microsoft.Rest.Generator.Go.Templates
@@ -37,22 +38,30 @@ const (
 type @(Model.ClientName) struct {
     autorest.Client
     BaseURI string
-    SubscriptionID string
+    APIVersion string
+    @foreach (var p in Model.Properties)
+    {
+    if (!p.SerializedName.IsApiVersion())
+    {
+    @:@(string.Format("{0} {1}", p.Name, p.Type.Name))
+    }
+    }
 }
 
 @EmptyLine
 @WrapComment("// ", string.Format("New creates an instance of the {0} client.", Model.ClientName))
-func New(subscriptionID string) @(Model.ClientName) {
-    return NewWithBaseURI(DefaultBaseURI, subscriptionID)
-}
-
-@EmptyLine
-@WrapComment("// ", string.Format("NewWithBaseURI creates an instance of the {0} client.", Model.ClientName))
-func NewWithBaseURI(baseURI string, subscriptionID string) @(Model.ClientName) {
+func New(@(Model.GlobalParameters)) @(Model.ClientName) {
     return @(Model.ClientName){
         Client: autorest.NewClientWithUserAgent(UserAgent()),
-        BaseURI: baseURI,
-        SubscriptionID: subscriptionID,
+        BaseURI: DefaultBaseURI,
+        APIVersion: APIVersion,
+        @foreach (var p in Model.Properties)
+        {
+        if (!p.SerializedName.IsApiVersion())
+        {
+        @:@(string.Format("{0}: {1},", p.Name, p.Name.ToSentence()))
+        }
+        }
     }
 }
 

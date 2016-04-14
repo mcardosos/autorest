@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Open Technologies, Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -62,6 +63,40 @@ namespace Microsoft.Rest.Generator.Go
                     return GoCodeNamer.PascalCase(PackageName);
                 }
                 return string.Empty;
+            }
+        }
+
+        public string GlobalParameters
+        {
+            get
+            {
+                List<string> declarations = new List<string>();
+                Properties
+                    .ForEach(p =>
+                    {
+                        if (!p.SerializedName.Contains("api-version"))
+                        {
+                            declarations.Add(string.Format("{0} {1}", p.Name.ToSentence(), p.Type.Name));
+                        }
+                    });
+                return string.Join(", ", declarations);
+            }
+        }
+
+        public string HelperGlobalParameters
+        {
+            get
+            {
+                List<string> invocationParams = new List<string>();
+                Properties
+                    .ForEach(p =>
+                    {
+                        if (!p.SerializedName.Contains("api-version"))
+                        {
+                            invocationParams.Add(p.Name.ToSentence());
+                        }
+                    });
+                return string.Join(", ", invocationParams);
             }
         }
 

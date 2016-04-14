@@ -159,7 +159,8 @@ namespace Microsoft.Rest.Generator.Go
             {
                 return
                     Parameters.Where(
-                        p => p != null && p.IsMethodArgument() && !string.IsNullOrWhiteSpace(p.Name))
+                        p => p != null && p.IsMethodArgument() && !string.IsNullOrWhiteSpace(p.Name) 
+                                                                && !p.SerializedName.IsApiVersion())
                         .OrderBy(item => !item.IsRequired);
             }
         }
