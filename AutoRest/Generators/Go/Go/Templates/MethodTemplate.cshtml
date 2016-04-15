@@ -75,7 +75,9 @@ func (client @(Model.Owner)) @(Model.PreparerMethodName)(@(Model.MethodParameter
     @:@(Model.QueryMap)
     foreach (Parameter p in Model.OptionalQueryParameters)
     {
-    @:if @(p.IsClientProperty() ? p.Type.GetEmptyCheck("client."+p.Name.Capitalize(), false) : p.Type.GetEmptyCheck(p.Name, false)) {
+    @:if @(p.IsClientProperty()
+             ? p.Type.GetEmptyCheck("client." + p.Name.Capitalize(), false)
+             : p.Type.GetEmptyCheck(p.Name, false)) {
         @:@(p.AddToMap("queryParameters"))
     @:}
     }
