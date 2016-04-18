@@ -189,10 +189,13 @@ namespace Microsoft.Rest.Generator.Go
                 ? "client." + GoCodeNamer.PascalCase(parameter.Name)
                 : parameter.Name;
 
+            var format = parameter.IsRequired || parameter.Type.CanBeEmpty()
+                                            ? "{0}"
+                                            : "*{0}";
 
-            var s = parameter.IsRequired || parameter.Type.CanBeEmpty() 
-                                    ? "autorest.Stringify({0})" 
-                                    : "autorest.Stringify(*{0})";
+            var s = parameter.CollectionFormat != CollectionFormat.None
+                                    ? string.Format("autorest.Stringify({0},\"{1}\")", format, parameter.CollectionFormat.GetSeparator()) 
+                                    : string.Format("autorest.Stringify({0})", format);
 
             return string.Format(
                        parameter.RequiresUrlEncoding()
