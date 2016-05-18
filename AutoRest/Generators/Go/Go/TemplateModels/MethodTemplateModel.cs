@@ -30,9 +30,9 @@ namespace Microsoft.Rest.Generator.Go
             Owner = owner;
             PackageName = packageName;
 
-            if (Parameters.Any(p => p.Type == PrimaryType.Stream && p.Location != ParameterLocation.Body))
+            if (Parameters.Any(p => p.Type.IsPrimaryType(KnownPrimaryType.Stream) && p.Location != ParameterLocation.Body))
             {
-                var parameter = Parameters.First(p => p.Type == PrimaryType.Stream && p.Location != ParameterLocation.Body);
+                var parameter = Parameters.First(p => p.Type.IsPrimaryType(KnownPrimaryType.Stream) && p.Location != ParameterLocation.Body);
                 if (parameter != null)
                 {
                     throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, Resources.IllegalStreamingParameter, parameter.Name));
@@ -254,19 +254,22 @@ namespace Microsoft.Rest.Generator.Go
                 decorators.Add("autorest.AsJSON()");
                 decorators.Add(HTTPMethodDecorator);
                 decorators.Add("autorest.WithBaseURL(client.BaseURI)");
-                decorators.Add(string.Format("autorest.WithPath(\"{0}\")", Url));
+                if (PathParameters.Count() > 0)
+                {
+                    decorators.Add(string.Format("autorest.WithPathParameters(\"{0}\",pathParameters)", Url));
+                }
+                else
+                {
+                    decorators.Add(string.Format("autorest.WithPath(\"{0}\")", Url));
+                }
                 foreach (var v in RequestHeaders)
                 {
-                    decorators.Add(string.Format("autorest.WithHeader(\"{0}\",autorest.Stringify({1}))", v.Key,
+                    decorators.Add(string.Format("autorest.WithHeader(\"{0}\",autorest.String({1}))", v.Key,
                         Parameters.First(p => p.SerializedName == v.Key).Name));
                 }
                 if (BodyParameter != null && BodyParameter.IsRequired)
                 {
                     decorators.Add(string.Format("autorest.WithJSON({0})", BodyParameter.Name));
-                }
-                if (PathParameters.Count() > 0)
-                {
-                    decorators.Add("autorest.WithPathParameters(pathParameters)");
                 }
                 if (QueryParameters.Count() > 0)
                 {
@@ -302,13 +305,13 @@ namespace Microsoft.Rest.Generator.Go
                 decorators.Add("client.ByInspecting()");
                 decorators.Add(string.Format("azure.WithErrorUnlessStatusCode({0})", string.Join(",", ResponseCodes.ToArray())));
 
-                if (!this.IsLongRunningOperation() && this.HasReturnValue())
+                if (!this.IsLongRunningOperation() && this.HasReturnValue() && !this.ReturnValue().Body.IsStreamType())
                 {
                     if (this.ReturnValue().Body is SyntheticType)
                     {
                         decorators.Add("autorest.ByUnmarshallingJSON(&result.Value)");
                     }
-                    else if (!this.ReturnValue().Body.IsStreamType())
+                    else
                     {
                         decorators.Add("autorest.ByUnmarshallingJSON(&result)");
                     }

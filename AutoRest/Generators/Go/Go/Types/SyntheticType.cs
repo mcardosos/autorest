@@ -25,35 +25,36 @@ namespace Microsoft.Rest.Generator.Go
 
             if (elementType is PrimaryType)
             {
-                if (elementType == PrimaryType.Boolean)
+                var type = (elementType as PrimaryType).Type;
+                if (type == KnownPrimaryType.Boolean)
                 {
                     Name += "Bool";
                 }
-                else if (elementType == PrimaryType.ByteArray)
+                else if (type == KnownPrimaryType.ByteArray)
                 {
                     Name += "ByteArray";
                 }
-                else if (elementType == PrimaryType.Double)
+                else if (type == KnownPrimaryType.Double)
                 {
                     Name += "Float64";
                 }
-                else if (elementType == PrimaryType.Int)
+                else if (type == KnownPrimaryType.Int)
                 {
                     Name += "Int32";
                 }
-                else if (elementType == PrimaryType.Long)
+                else if (type == KnownPrimaryType.Long)
                 {
                     Name += "Int64";
                 }
-                else if (elementType == PrimaryType.Stream)
+                else if (type == KnownPrimaryType.Stream)
                 {
                     Name += "ReadCloser";
                 }
-                else if (elementType == PrimaryType.String)
+                else if (type == KnownPrimaryType.String)
                 {
                     Name += "String";
                 }
-                else if (elementType == PrimaryType.TimeSpan)
+                else if (type == KnownPrimaryType.TimeSpan)
                 {
                     Name += "TimeSpan";
                 }
@@ -92,7 +93,7 @@ namespace Microsoft.Rest.Generator.Go
 
         public static bool IsAllowedPrimitiveType(IType type)
         {
-            return !(type is DictionaryType || type is SequenceType || type == PrimaryType.Stream);
+            return !(type is DictionaryType || type is SequenceType || type.IsPrimaryType(KnownPrimaryType.Stream));
         }
 
         public IType getElementType(IType type)

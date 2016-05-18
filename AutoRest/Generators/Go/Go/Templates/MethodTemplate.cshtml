@@ -20,7 +20,7 @@
             sb.Append(parameter.Documentation.ToSentence());
             sb.Append(" ");
         }
-        if (parameter.Type == PrimaryType.Stream)
+        if (parameter.Type.IsPrimaryType(KnownPrimaryType.Stream))
         {
             sb.Append(parameter.Name);
             sb.Append(" will be closed upon successful return. Callers should ensure closure when receiving an error.");
@@ -88,9 +88,9 @@ func (client @(Model.Owner)) @(Model.PreparerMethodName)(@(Model.MethodParameter
 {
     @:preparer := autorest.CreatePreparer(
                         @:@(pd.EmitAsArguments()))
-    @:if @(Model.BodyParameter.Type.GetEmptyCheck(Model.BodyParameter.SerializedName, false)) {
+    @:if @(Model.BodyParameter.Type.GetEmptyCheck(Model.BodyParameter.Name, false)) {
         @:preparer = autorest.DecoratePreparer(preparer,
-                            @:@(string.Format("autorest.WithJSON({0})", Model.BodyParameter.SerializedName)))
+                            @:@(string.Format("autorest.WithJSON({0})", Model.BodyParameter.Name)))
     @:}
     @:@(Model.IsLongRunningOperation()
                       ? "return preparer.Prepare(&http.Request{Cancel: cancel})"
