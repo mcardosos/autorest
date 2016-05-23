@@ -254,6 +254,11 @@ namespace Microsoft.Rest.Generator.Go
                 decorators.Add(HTTPMethodDecorator);
                 decorators.Add("autorest.WithBaseURL(client.BaseURI)");
                 decorators.Add(string.Format("autorest.WithPath(\"{0}\")", Url));
+                foreach (var v in RequestHeaders)
+                {
+                    decorators.Add(string.Format("autorest.WithHeader(\"{0}\",autorest.Stringify({1}))", v.Key,
+                        Parameters.First(p => p.SerializedName == v.Key).Name));
+                }
                 if (BodyParameter != null && BodyParameter.IsRequired)
                 {
                     decorators.Add(string.Format("autorest.WithJSON({0})", BodyParameter.Name));
