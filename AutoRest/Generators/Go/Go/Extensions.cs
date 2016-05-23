@@ -166,10 +166,10 @@ namespace Microsoft.Rest.Generator.Go
         public static void AddImports(this Parameter parameter, HashSet<string> imports)
         {
             parameter.Type.AddImports(imports);
-            if (parameter.RequiresUrlEncoding())
+            /*if (parameter.RequiresUrlEncoding())
             {
                 imports.Add("net/url");
-            }
+            }*/
         }
 
         public static string NameForMap(this Parameter parameter)
@@ -189,14 +189,14 @@ namespace Microsoft.Rest.Generator.Go
                 ? "client." + GoCodeNamer.PascalCase(parameter.Name)
                 : parameter.Name;
 
-            if (parameter.RequiresUrlEncoding())
-            {
-                value = string.Format(
-                            parameter.Type as PrimaryType != null && (parameter.Type as PrimaryType).Equals(PrimaryType.String)
-                                ? "url.QueryEscape({0})"
-                                : "url.QueryEscape(string({0}))", value);
-            }
-            return value;
+            var s = parameter.IsRequired || parameter.Type.CanBeEmpty()
+                                     ? "autorest.Stringify({0})"
+                                     : "autorest.Stringify(*{0})";
+            return string.Format(
+                parameter.RequiresUrlEncoding()
+                    ? string.Format("autorest.EncodeURI({0})", s)
+                    : string.Format("{0}", s),
+                value);
         }
 
         public static IEnumerable<Parameter> ByLocation(this IEnumerable<Parameter> parameters, ParameterLocation location)
