@@ -4,6 +4,7 @@
 @using Microsoft.Rest.Generator.Go
 @using Microsoft.Rest.Generator.Go.Templates
 @using Microsoft.Rest.Generator.Utilities
+@using System.Linq
 
 @inherits Microsoft.Rest.Generator.Go.Template<Microsoft.Rest.Generator.Go.ServiceClientTemplateModel>
 @{
@@ -37,7 +38,14 @@ const (
 type @(Model.ClientName) struct {
     autorest.Client
     BaseURI string
-    SubscriptionID string
+APIVersion string
+@foreach (var p in Model.Properties)
+{
+    if (!p.SerializedName.IsApiVersion())
+    {
+        @:@(string.Format("{0} {1}", p.Name, p.Type.Name))
+    }
+}
 }
 
 @EmptyLine
@@ -48,11 +56,18 @@ func New(subscriptionID string) @(Model.ClientName) {
 
 @EmptyLine
 @WrapComment("// ", string.Format("NewWithBaseURI creates an instance of the {0} client.", Model.ClientName))
-func NewWithBaseURI(baseURI string, subscriptionID string) @(Model.ClientName) {
+func New(@(Model.GlobalParameters)) @(Model.ClientName) {
     return @(Model.ClientName){
         Client: autorest.NewClientWithUserAgent(UserAgent()),
-        BaseURI: baseURI,
-        SubscriptionID: subscriptionID,
+       BaseURI: DefaultBaseURI,
+        APIVersion: APIVersion,
+         @foreach (var p in Model.Properties)
+         {
+         if (!p.SerializedName.IsApiVersion())
+         {
+         @:@(string.Format("{0}: {1},", p.Name, p.Name.ToSentence()))
+         }
+         }
     }
 }
 

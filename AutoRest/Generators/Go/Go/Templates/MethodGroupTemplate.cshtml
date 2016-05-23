@@ -32,14 +32,14 @@ type @(Model.ClientName) struct {
 }
 
 @WrapComment("// ", string.Format("New{0} creates an instance of the {0} client.", Model.ClientName))
-func New@(Model.ClientName)(subscriptionID string) @(Model.ClientName) {
+func New@(Model.ClientName)(@(Model.GlobalParameters)) @(Model.ClientName) {
     return New@(Model.ClientName)WithBaseURI(DefaultBaseURI, subscriptionID)
 }
 @EmptyLine
 
 @WrapComment("// ", string.Format("New{0}WithBaseURI creates an instance of the {0} client.", Model.ClientName))
 func New@(Model.ClientName)WithBaseURI(baseURI string, subscriptionID string) @(Model.ClientName) {
-    return @(Model.ClientName){NewWithBaseURI(baseURI, subscriptionID)}
+    return @(Model.ClientName){New(@(Model.HelperGlobalParameters))}
 }
 @EmptyLine
 

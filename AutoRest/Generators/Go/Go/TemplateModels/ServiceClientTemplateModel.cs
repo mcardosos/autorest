@@ -65,6 +65,40 @@ namespace Microsoft.Rest.Generator.Go
             }
         }
 
+        public string GlobalParameters
+        {
+            get
+            {
+                List<string> declarations = new List<string>();
+                Properties
+                    .ForEach(p =>
+                    {
+                        if (!p.SerializedName.Contains("api-version"))
+                        {
+                            declarations.Add(string.Format("{0} {1}", p.Name.ToSentence(), p.Type.Name));
+                        }
+                    });
+                return string.Join(", ", declarations);
+            }
+        }
+
+        public string HelperGlobalParameters
+        {
+            get
+            {
+                List<string> invocationParams = new List<string>();
+                Properties
+                    .ForEach(p =>
+                    {
+                        if (!p.SerializedName.Contains("api-version"))
+                        {
+                            invocationParams.Add(p.Name.ToSentence());
+                        }
+                    });
+                return string.Join(", ", invocationParams);
+            }
+        }
+
         public virtual IEnumerable<string> Imports
         {
             get

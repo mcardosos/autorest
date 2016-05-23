@@ -174,16 +174,16 @@ namespace Microsoft.Rest.Generator.Go
 
         public static string NameForMap(this Parameter parameter)
         {
-            return parameter.IsApiVersion()
-                        ? ApiVersionSerializedName
+            return parameter.SerializedName.IsApiVersion()
+                       ? ApiVersionSerializedName
                         : parameter.SerializedName;
         }
 
         public static string ValueForMap(this Parameter parameter)
         {
-            if (parameter.IsApiVersion())
+            if (parameter.SerializedName.IsApiVersion())
             {
-                return ApiVersionName;
+                return "client." + ApiVersionName;
             }
             var value = parameter.IsClientProperty()
                 ? "client." + GoCodeNamer.PascalCase(parameter.Name)
@@ -283,9 +283,9 @@ namespace Microsoft.Rest.Generator.Go
             return !parameter.IsClientProperty();
         }
 
-        public static bool IsApiVersion(this Parameter parameter)
+        public static bool IsApiVersion(this string name)
         {
-            return parameter.Name.Equals(ApiVersionName, StringComparison.OrdinalIgnoreCase);
+            return name.Equals(ApiVersionSerializedName, StringComparison.OrdinalIgnoreCase);
         }
 
         public static bool RequiresUrlEncoding(this Parameter parameter)
