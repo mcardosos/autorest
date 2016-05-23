@@ -20,7 +20,7 @@
             sb.Append(parameter.Documentation.ToSentence());
             sb.Append(" ");
         }
-        if (parameter.Type == PrimaryType.Stream)
+        if (parameter.Type.IsPrimaryType(KnownPrimaryType.Stream))
         {
             sb.Append(parameter.Name);
             sb.Append(" will be closed upon successful return. Callers should ensure closure when receiving an error.");

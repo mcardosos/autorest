@@ -312,9 +312,19 @@ namespace Microsoft.Rest.Generator.Go
         public static bool IsStreamType(this IType body)
         {
             var r = body as SyntheticType;
-            return (r != null && (r.BaseType == PrimaryType.Stream))
-                            ? true
-                            : false;
+            return r != null && (r.BaseType.IsPrimaryType(KnownPrimaryType.Stream));
+        }
+
+
+        public static bool IsPrimaryType(this IType type, KnownPrimaryType typeToMatch)
+        {
+            if (type == null)
+            {
+                return false;
+            }
+
+            PrimaryType primaryType = type as PrimaryType;
+            return primaryType != null && primaryType.Type == typeToMatch;
         }
 
         public static bool CanBeEmpty(this IType type)
@@ -328,9 +338,9 @@ namespace Microsoft.Rest.Generator.Go
             return dictionaryType != null
                 || interfaceType !=  null
                 || (    primaryType != null
-                    && (    primaryType == PrimaryType.ByteArray
-                        ||  primaryType == PrimaryType.Stream
-                        ||  primaryType == PrimaryType.String))
+                 && (primaryType.Type == KnownPrimaryType.ByteArray
+                        || primaryType.Type == KnownPrimaryType.Stream
+                        || primaryType.Type == KnownPrimaryType.String))
                 || sequenceType != null
                 || enumType != null;
         }
@@ -345,8 +355,8 @@ namespace Microsoft.Rest.Generator.Go
             return dictionaryType != null
                 || interfaceType != null
                 || (    primaryType != null
-                    &&  (   primaryType == PrimaryType.ByteArray
-                        ||  primaryType == PrimaryType.Stream))
+                   && (primaryType.Type == KnownPrimaryType.ByteArray
+                      || primaryType.Type == KnownPrimaryType.Stream))
                 || sequenceType != null;
         }
         
@@ -392,13 +402,13 @@ namespace Microsoft.Rest.Generator.Go
 
         public static string GetEmptyCheck(this PrimaryType type, string valueReference, bool asEmpty)
         {
-            if (type == PrimaryType.ByteArray)
+            if (type.IsPrimaryType(KnownPrimaryType.ByteArray))
             {
                 return string.Format(asEmpty
                                         ? "{0} == nil || len({0}) == 0"
                                         : "{0} != nil && len({0}) > 0", valueReference);
             }
-            else if (type == PrimaryType.String)
+            else if (type.IsPrimaryType(KnownPrimaryType.String))
             {
                 return string.Format(asEmpty
                                         ? "len({0}) == 0"
@@ -439,7 +449,7 @@ namespace Microsoft.Rest.Generator.Go
                 {
                     var property = new Property();
                     property.Name = nextLinkField;
-                    property.Type = PrimaryType.String;
+                    property.Type = new PrimaryType(KnownPrimaryType.String) { Name = "string" };
                     properties = new List<Property>(properties);
                     properties.Add(property);
                 }
@@ -521,7 +531,7 @@ namespace Microsoft.Rest.Generator.Go
 
         public static void AddImports(this PrimaryType primaryType, HashSet<string> imports)
         {
-            if (primaryType == PrimaryType.Stream)
+            if (primaryType.Type == KnownPrimaryType.Stream)
             {
                 imports.Add("io");
             }

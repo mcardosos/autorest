@@ -30,9 +30,9 @@ namespace Microsoft.Rest.Generator.Go
             Owner = owner;
             PackageName = packageName;
 
-            if (Parameters.Any(p => p.Type == PrimaryType.Stream && p.Location != ParameterLocation.Body))
+            if (Parameters.Any(p => p.Type.IsPrimaryType(KnownPrimaryType.Stream) && p.Location != ParameterLocation.Body))
             {
-                var parameter = Parameters.First(p => p.Type == PrimaryType.Stream && p.Location != ParameterLocation.Body);
+                var parameter = Parameters.First(p => p.Type.IsPrimaryType(KnownPrimaryType.Stream) && p.Location != ParameterLocation.Body);
                 if (parameter != null)
                 {
                     throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, Resources.IllegalStreamingParameter, parameter.Name));

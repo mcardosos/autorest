@@ -112,7 +112,7 @@ namespace Microsoft.Rest.Generator.Go
                         .ForEach(mtm =>
                         {
                             mtm.Parameters.ForEach(p => p.AddImports(imports));
-                            if (mtm.HasReturnValue() && mtm.ReturnValue().Body != PrimaryType.Stream)
+                            if (mtm.HasReturnValue() && !mtm.ReturnValue().Body.IsPrimaryType(KnownPrimaryType.Stream))
                             {
                                 mtm.ReturnType.Body.AddImports(imports);
                             }

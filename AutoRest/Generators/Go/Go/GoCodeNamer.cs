@@ -419,23 +419,23 @@ namespace Microsoft.Rest.Generator.Go
 
         private IType NormalizePrimaryType(PrimaryType primaryType)
         {
-            if (primaryType == PrimaryType.Object)
+            if (primaryType.Type == KnownPrimaryType.Object)
             {
                 return new MapType(new InterfaceType());
             }
-            else if (primaryType == PrimaryType.Date)
+            else if (primaryType.Type == KnownPrimaryType.Date)
             {
                 return new PackageType { Import = "github.com/Azure/go-autorest/autorest/date", Member = "Date" };
             }
-            else if (primaryType == PrimaryType.DateTimeRfc1123)
+            else if (primaryType.Type == KnownPrimaryType.DateTimeRfc1123)
             {
                 return new PackageType { Import = "github.com/Azure/go-autorest/autorest/date", Member = "TimeRFC1123" };
             }
-            else if (primaryType == PrimaryType.DateTime)
+            else if (primaryType.Type == KnownPrimaryType.DateTime)
             {
                 return new PackageType { Import = "github.com/Azure/go-autorest/autorest/date", Member = "Time" };
             }
-            else if (primaryType == PrimaryType.Decimal)
+            else if (primaryType.Type == KnownPrimaryType.Decimal)
             {
                 return new PackageType { Import = "github.com/shopspring/decimal", Member = "Decimal" };
             }
@@ -444,27 +444,27 @@ namespace Microsoft.Rest.Generator.Go
                 // The remaining Primary types normalize to the same object
                 _normalizedTypes[primaryType] = primaryType;
 
-                if (primaryType == PrimaryType.Boolean)
+                if (primaryType.Type == KnownPrimaryType.Boolean)
                 {
                     primaryType.Name = "bool";
                 }
-                else if (primaryType == PrimaryType.ByteArray)
+                else if (primaryType.Type == KnownPrimaryType.ByteArray)
                 {
                     primaryType.Name = "[]byte";
                 }
-                else if (primaryType == PrimaryType.Double)
+                else if (primaryType.Type == KnownPrimaryType.Double)
                 {
                     primaryType.Name = "float64";
                 }
-                else if (primaryType == PrimaryType.Int)
+                else if (primaryType.Type == KnownPrimaryType.Int)
                 {
                     primaryType.Name = "int32";
                 }
-                else if (primaryType == PrimaryType.Long)
+                else if (primaryType.Type == KnownPrimaryType.Long)
                 {
                     primaryType.Name = "int64";
                 }
-                else if (primaryType == PrimaryType.Stream)
+                else if (primaryType.Type == KnownPrimaryType.Stream)
                 {
                     // Note:
                     // -- All streaming will be through instances of an io.ReadCloser
@@ -472,11 +472,11 @@ namespace Microsoft.Rest.Generator.Go
                     // -- When streaming from the servier, the method will return access to the (open) http.Response body
                     primaryType.Name = "io.ReadCloser";
                 }
-                else if (primaryType == PrimaryType.String)
+                else if (primaryType.Type == KnownPrimaryType.String)
                 {
                     primaryType.Name = "string";
                 }
-                else if (primaryType == PrimaryType.TimeSpan)
+                else if (primaryType.Type == KnownPrimaryType.TimeSpan)
                 {
                     primaryType.Name = "string";
                 }
@@ -699,5 +699,13 @@ namespace Microsoft.Rest.Generator.Go
             return namespaceParts[namespaceParts.Count() - 1];
         }
 
+        public override string EscapeDefaultValue(string defaultValue, IType type)
+        {
+            if (type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
+            return defaultValue;
+        }
     }
 }
