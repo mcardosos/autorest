@@ -309,13 +309,13 @@ namespace Microsoft.Rest.Generator.Go
                 decorators.Add("client.ByInspecting()");
                 decorators.Add(string.Format("azure.WithErrorUnlessStatusCode({0})", string.Join(",", ResponseCodes.ToArray())));
 
-                if (!this.IsLongRunningOperation() && this.HasReturnValue())
+                if (!this.IsLongRunningOperation() && this.HasReturnValue() && !this.ReturnValue().Body.IsStreamType())
                 {
                     if (this.ReturnValue().Body is SyntheticType)
                     {
                         decorators.Add("autorest.ByUnmarshallingJSON(&result.Value)");
                     }
-                    else if (!this.ReturnValue().Body.IsStreamType())
+                    else
                     {
                         decorators.Add("autorest.ByUnmarshallingJSON(&result)");
                     }
