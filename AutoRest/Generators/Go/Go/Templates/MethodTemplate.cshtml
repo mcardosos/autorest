@@ -88,9 +88,9 @@ func (client @(Model.Owner)) @(Model.PreparerMethodName)(@(Model.MethodParameter
 {
     @:preparer := autorest.CreatePreparer(
                         @:@(pd.EmitAsArguments()))
-    @:if @(Model.BodyParameter.Type.GetEmptyCheck(Model.BodyParameter.SerializedName, false)) {
+    @:if @(Model.BodyParameter.Type.GetEmptyCheck(Model.BodyParameter.Name, false)) {
         @:preparer = autorest.DecoratePreparer(preparer,
-                            @:@(string.Format("autorest.WithJSON({0})", Model.BodyParameter.SerializedName)))
+                            @:@(string.Format("autorest.WithJSON({0})", Model.BodyParameter.Name)))
     @:}
     @:@(Model.IsLongRunningOperation()
                       ? "return preparer.Prepare(&http.Request{Cancel: cancel})"

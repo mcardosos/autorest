@@ -194,12 +194,12 @@ namespace Microsoft.Rest.Generator.Go
                                           : "*{0}";
 
             var s = parameter.CollectionFormat != CollectionFormat.None
-                                  ? string.Format("autorest.Stringify({0},\"{1}\")", format, parameter.CollectionFormat.GetSeparator())
-                                   : string.Format("autorest.Stringify({0})", format);
+                                  ? string.Format("{0},\"{1}\"", format, parameter.CollectionFormat.GetSeparator())
+                                  : string.Format("{0}", format);
 
             return string.Format(
                 parameter.RequiresUrlEncoding()
-                    ? string.Format("autorest.EncodeURI({0})", s)
+                    ? string.Format("autorest.Encode(\"{0}\",{1})", parameter.Location, s)
                     : string.Format("{0}", s),
                 value);
         }
@@ -295,7 +295,7 @@ namespace Microsoft.Rest.Generator.Go
 
         public static bool RequiresUrlEncoding(this Parameter parameter)
         {
-            return parameter.Location == ParameterLocation.Path && !parameter.Extensions.ContainsKey(SkipUrlEncoding);
+            return (parameter.Location == ParameterLocation.Query || parameter.Location == ParameterLocation.Path) && !parameter.Extensions.ContainsKey(SkipUrlEncoding);
         }
 
         public static string JsonTag(this Property property, bool omitEmpty = true)

@@ -253,11 +253,19 @@ namespace Microsoft.Rest.Generator.Go
                 decorators.Add("autorest.AsJSON()");
                 decorators.Add(HTTPMethodDecorator);
                 decorators.Add("autorest.WithBaseURL(client.BaseURI)");
-                decorators.Add(string.Format("autorest.WithPath(\"{0}\")", Url));
+                if (PathParameters.Count() > 0)
+                {
+                    decorators.Add(string.Format("autorest.WithPathParameters(\"{0}\",pathParameters)", Url));
+                }
+                else
+                {
+                    decorators.Add(string.Format("autorest.WithPath(\"{0}\")", Url));
+                }
+
                 foreach (var v in RequestHeaders)
                 {
-                    decorators.Add(string.Format("autorest.WithHeader(\"{0}\",autorest.Stringify({1}))", v.Key,
-                        Parameters.First(p => p.SerializedName == v.Key).Name));
+                    decorators.Add(string.Format("autorest.WithHeader(\"{0}\",autorest.String({1}))", v.Key,
+                         Parameters.First(p => p.SerializedName == v.Key).Name));
                 }
                 if (BodyParameter != null && BodyParameter.IsRequired)
                 {
