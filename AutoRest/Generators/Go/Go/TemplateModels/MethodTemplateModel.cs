@@ -271,10 +271,6 @@ namespace Microsoft.Rest.Generator.Go
                 {
                     decorators.Add(string.Format("autorest.WithJSON({0})", BodyParameter.Name));
                 }
-                if (PathParameters.Count() > 0)
-                {
-                    decorators.Add("autorest.WithPathParameters(pathParameters)");
-                }
                 if (QueryParameters.Count() > 0)
                 {
                     decorators.Add("autorest.WithQueryParameters(queryParameters)");

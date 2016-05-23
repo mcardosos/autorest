@@ -439,6 +439,10 @@ namespace Microsoft.Rest.Generator.Go
             {
                 return new PackageType { Import = "github.com/shopspring/decimal", Member = "Decimal" };
             }
+            else if (primaryType.Type == KnownPrimaryType.Uuid)
+            {
+                return new PackageType {Import = "github.com/satori/uuid", Member = "UUID"};
+            }
             else
             {
                 // The remaining Primary types normalize to the same object
