@@ -120,6 +120,7 @@ namespace Microsoft.Rest.Generator.Go
             }
 
             // Go names some constants slightly differently than the HttpStatusCode enumeration -- correct those
+            StatusCodeToGoString[HttpStatusCode.Redirect] = "http.StatusFound";
             StatusCodeToGoString[HttpStatusCode.NonAuthoritativeInformation] = "http.StatusNonAuthoritativeInfo";
             StatusCodeToGoString[HttpStatusCode.ProxyAuthenticationRequired] = "http.StatusProxyAuthRequired";
             StatusCodeToGoString[HttpStatusCode.RequestUriTooLong] = "http.StatusRequestURITooLong";
