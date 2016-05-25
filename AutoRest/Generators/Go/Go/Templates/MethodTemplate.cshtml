@@ -83,6 +83,11 @@ func (client @(Model.Owner)) @(Model.PreparerMethodName)(@(Model.MethodParameter
     }
     @:@EmptyLine
 }
+@if (Model.FormDataParameters.Any())
+{
+    @:@(Model.FormDataMap)
+    @:@EmptyLine
+}
 
 @if (Model.BodyParameter != null && !Model.BodyParameter.IsRequired)
 {

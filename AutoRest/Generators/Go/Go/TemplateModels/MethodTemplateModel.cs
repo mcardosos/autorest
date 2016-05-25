@@ -30,13 +30,12 @@ namespace Microsoft.Rest.Generator.Go
             Owner = owner;
             PackageName = packageName;
 
-            if (Parameters.Any(p => p.Type.IsPrimaryType(KnownPrimaryType.Stream) && p.Location != ParameterLocation.Body))
+            var parameter = Parameters.Find(p => p.Type.IsPrimaryType(KnownPrimaryType.Stream)
+                                                && !(p.Location == ParameterLocation.Body || p.Location == ParameterLocation.FormData));
+            if (parameter != null)
             {
-                var parameter = Parameters.First(p => p.Type.IsPrimaryType(KnownPrimaryType.Stream) && p.Location != ParameterLocation.Body);
-                if (parameter != null)
-                {
-                    throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, Resources.IllegalStreamingParameter, parameter.Name));
-                }
+                throw new ArgumentException(string.Format(CultureInfo.InvariantCulture,
+                    Resources.IllegalStreamingParameter, parameter.Name));
             }
 
             if (string.IsNullOrEmpty(Description))
@@ -228,6 +227,14 @@ namespace Microsoft.Rest.Generator.Go
             }
         }
 
+        public string FormDataMap
+        {
+            get
+            {
+                return FormDataParameters.BuildParameterMap("formDataParameters");
+            }
+        }
+
         public List<string> ResponseCodes
         {
             get
@@ -250,31 +257,49 @@ namespace Microsoft.Rest.Generator.Go
             get
             {
                 var decorators = new List<string>();
-                decorators.Add("autorest.AsJSON()");
-                decorators.Add(HTTPMethodDecorator);
-                decorators.Add("autorest.WithBaseURL(client.BaseURI)");
-                if (PathParameters.Count() > 0)
+
+                if (BodyParameter != null  && !BodyParameter.Type.IsPrimaryType(KnownPrimaryType.Stream))
                 {
-                    decorators.Add(string.Format("autorest.WithPathParameters(\"{0}\",pathParameters)", Url));
-                }
-                else
-                {
-                    decorators.Add(string.Format("autorest.WithPath(\"{0}\")", Url));
+                    decorators.Add("autorest.AsJSON()");
                 }
 
-                foreach (var v in RequestHeaders)
+                decorators.Add(HTTPMethodDecorator);
+                decorators.Add("autorest.WithBaseURL(client.BaseURI)");
+
+                decorators.Add(string.Format(PathParameters.Any()
+                            ? "autorest.WithPathParameters(\"{0}\",pathParameters)"
+                            : "autorest.WithPath(\"{0}\")",
+                        Url));
+
+                if (RequestHeaders.Any())
                 {
-                    decorators.Add(string.Format("autorest.WithHeader(\"{0}\",autorest.String({1}))", v.Key,
-                         Parameters.First(p => p.SerializedName == v.Key).Name));
+                    decorators.AddRange(
+                            RequestHeaders.Select(v => string.Format("autorest.WithHeader(\"{0}\",autorest.String({1}))",
+                                                            v.Key, Parameters.First(p => p.SerializedName == v.Key).Name)));
                 }
+
                 if (BodyParameter != null && BodyParameter.IsRequired)
                 {
-                    decorators.Add(string.Format("autorest.WithJSON({0})", BodyParameter.Name));
+                    decorators.Add(string.Format(BodyParameter.Type.IsPrimaryType(KnownPrimaryType.Stream) && BodyParameter.Location == ParameterLocation.Body
+                                        ? "autorest.WithFile({0})"
+                                        : "autorest.WithJSON({0})",
+                                BodyParameter.Name)                                );
                 }
-                if (QueryParameters.Count() > 0)
+
+                if (QueryParameters.Any())
                 {
                     decorators.Add("autorest.WithQueryParameters(queryParameters)");
                 }
+
+                if (FormDataParameters.Any())
+                {
+                    decorators.Add(
+                        FormDataParameters.Any(p => p.Type.IsPrimaryType(KnownPrimaryType.Stream))
+                            ? "autorest.WithMultiPartFormData(formDataParameters)"
+                            : "autorest.WithFormData(formDataParameters)"
+                        );
+                }
+
                 return decorators;
             }
         }
