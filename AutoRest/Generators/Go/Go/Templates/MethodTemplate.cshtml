@@ -40,6 +40,16 @@
 }
 
 func (client @(Model.Owner)) @(Model.MethodSignature) (@Model.MethodReturnSignature) {
+    @foreach (Parameter p in Model.Parameters.FindAll(p=> p.IsRequired))
+    {
+    if (p.Type.CanBeNull())
+    { 
+    @:if @(p.Type.GetNullCheck(p.GetParameterName(), true)) {
+        @:return result, @(Model.AutorestError("Required parameter is empty - ", null, p.GetParameterName()))
+    @:}
+    @:@EmptyLine
+    }
+    }
     req, err := client.@(Model.PreparerMethodName)(@(Model.HelperInvocationParameters))
     if err != nil {
         return result, @(Model.AutorestError("preparing"))
@@ -75,40 +85,45 @@ func (client @(Model.Owner)) @(Model.PreparerMethodName)(@(Model.MethodParameter
     @:@(Model.QueryMap)
     foreach (Parameter p in Model.OptionalQueryParameters)
     {
-   @:if @(p.IsClientProperty()
-             ? p.Type.GetEmptyCheck("client." + p.Name.Capitalize(), false)
-             : p.Type.GetEmptyCheck(p.Name, false)) {
+    @:if @(p.Type.GetEmptyCheck(p.GetParameterName(),false)) {
         @:@(p.AddToMap("queryParameters"))
     @:}
     }
     @:@EmptyLine
 }
+
 @if (Model.FormDataParameters.Any())
 {
     @:@(Model.FormDataMap)
     @:@EmptyLine
 }
 
+
+    preparer := autorest.CreatePreparer(
+                        @(pd.EmitAsArguments()))
+
 @if (Model.BodyParameter != null && !Model.BodyParameter.IsRequired)
 {
-    @:preparer := autorest.CreatePreparer(
-                        @:@(pd.EmitAsArguments()))
     @:if @(Model.BodyParameter.Type.GetEmptyCheck(Model.BodyParameter.Name, false)) {
         @:preparer = autorest.DecoratePreparer(preparer,
                             @:@(string.Format("autorest.WithJSON({0})", Model.BodyParameter.Name)))
     @:}
-    @:@(Model.IsLongRunningOperation()
-                      ? "return preparer.Prepare(&http.Request{Cancel: cancel})"
-                      : "return preparer.Prepare(&http.Request{})")
 }
-else
-{
-    @:@(Model.IsLongRunningOperation()
-                      ? "return autorest.Prepare(&http.Request{Cancel: cancel}, "
-                      : "return autorest.Prepare(&http.Request{},")
-                @:@(pd.EmitAsArguments()))
+
+@foreach (Parameter p in Model.OptionalHeaderParameters)
+    {
+    @:if @(p.Type.GetEmptyCheck(p.GetParameterName(),false)) {
+        @:preparer = autorest.DecoratePreparer(preparer,
+                            @:@(string.Format("autorest.WithHeader(\"{0}\",autorest.String({1}))",
+                            p.SerializedName, p.Name)))
+    @:}
 }
+
+    @(Model.IsLongRunningOperation()
+        ? "return preparer.Prepare(&http.Request{Cancel: cancel})"
+        : "return preparer.Prepare(&http.Request{})")
 }
+
 
 @EmptyLine
 // @(Model.SenderMethodName) sends the @(Model.ScopedName) request. The method will close the

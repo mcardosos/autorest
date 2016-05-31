@@ -73,9 +73,12 @@ namespace Microsoft.Rest.Generator.Go
                 Properties
                     .ForEach(p =>
                     {
-                        if (!p.SerializedName.Contains("api-version"))
+                        if (!p.SerializedName.IsApiVersion())
                         {
-                            declarations.Add(string.Format("{0} {1}", p.Name.ToSentence(), p.Type.Name));
+                            declarations.Add(
+                                string.Format(
+                                        (p.IsRequired || p.Type.CanBeEmpty() ? "{0} {1}" : "{0} *{1}"), 
+                                         p.Name.ToSentence(), p.Type.Name));
                         }
                     });
                 return string.Join(", ", declarations);
@@ -90,7 +93,7 @@ namespace Microsoft.Rest.Generator.Go
                 Properties
                     .ForEach(p =>
                     {
-                        if (!p.SerializedName.Contains("api-version"))
+                        if (!p.SerializedName.IsApiVersion())
                         {
                             invocationParams.Add(p.Name.ToSentence());
                         }

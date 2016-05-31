@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -241,6 +242,11 @@ namespace Microsoft.Rest.Generator.Go
             return parameters.ByLocation(ParameterLocation.Header);
         }
 
+        public static IEnumerable<Parameter> HeaderParameters(this IEnumerable<Parameter> parameters, bool isRequired)
+        {
+            return parameters.ByLocationAsRequired(ParameterLocation.Header, isRequired);
+        }
+
         public static IEnumerable<Parameter> PathParameters(this IEnumerable<Parameter> parameters)
         {
             return parameters.ByLocation(ParameterLocation.Path);
@@ -283,6 +289,13 @@ namespace Microsoft.Rest.Generator.Go
             return parameter.ClientProperty != null;
         }
 
+        public static string GetParameterName(this Parameter parameter)
+        {
+            return parameter.IsClientProperty()
+                            ? "client." + parameter.Name.Capitalize()
+                            : parameter.Name;
+        }
+
         public static bool IsMethodArgument(this Parameter parameter)
         {
             return !parameter.IsClientProperty();
@@ -290,7 +303,8 @@ namespace Microsoft.Rest.Generator.Go
 
         public static bool IsApiVersion(this string name)
         {
-            return name.Equals(ApiVersionSerializedName, StringComparison.OrdinalIgnoreCase);
+            string rgx = @"^api[^a-zA-Z0-9]?version";
+            return Regex.IsMatch(name, rgx, RegexOptions.IgnoreCase);
         }
 
         public static bool RequiresUrlEncoding(this Parameter parameter)
@@ -428,6 +442,16 @@ namespace Microsoft.Rest.Generator.Go
                                     ? "{0} == nil || len({0}) == 0"
                                     : "{0} != nil && len({0}) > 0", valueReference);
         }
+
+        public static string GetNullCheck(this IType type, string valueReference, bool asNull = true)
+        {
+            return string.Format(asNull
+                                        ? "{0} == nil"
+                                        : "{0} != nil", valueReference);
+        }
+
+
+
 
         public static string Fields(this CompositeType compositeType)
         {

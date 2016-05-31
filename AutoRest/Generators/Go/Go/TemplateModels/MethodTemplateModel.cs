@@ -187,6 +187,14 @@ namespace Microsoft.Rest.Generator.Go
             }
         }
 
+        public IEnumerable<Parameter> OptionalHeaderParameters
+        {
+            get
+            {
+                return Parameters.HeaderParameters(false);
+            }
+        }
+
         public IEnumerable<Parameter> PathParameters
         {
             get
@@ -271,13 +279,6 @@ namespace Microsoft.Rest.Generator.Go
                             : "autorest.WithPath(\"{0}\")",
                         Url));
 
-                if (RequestHeaders.Any())
-                {
-                    decorators.AddRange(
-                            RequestHeaders.Select(v => string.Format("autorest.WithHeader(\"{0}\",autorest.String({1}))",
-                                                            v.Key, Parameters.First(p => p.SerializedName == v.Key).Name)));
-                }
-
                 if (BodyParameter != null && BodyParameter.IsRequired)
                 {
                     decorators.Add(string.Format(BodyParameter.Type.IsPrimaryType(KnownPrimaryType.Stream) && BodyParameter.Location == ParameterLocation.Body
@@ -298,6 +299,15 @@ namespace Microsoft.Rest.Generator.Go
                             ? "autorest.WithMultiPartFormData(formDataParameters)"
                             : "autorest.WithFormData(formDataParameters)"
                         );
+                }
+
+                if (RequestHeaders.Any())
+                {
+                    foreach (var param in Parameters.Where(p => p.IsRequired && p.Location == ParameterLocation.Header))
+                    {
+                        decorators.Add(string.Format("autorest.WithHeader(\"{0}\",autorest.String({1}))",
+                           param.SerializedName, param.Name));
+                    }
                 }
 
                 return decorators;
@@ -361,11 +371,13 @@ namespace Microsoft.Rest.Generator.Go
             }
         }
 
-        public string AutorestError(string phase, string response = null)
+        public string AutorestError(string phase, string response = null, string parameter = null)
         {
-            return string.IsNullOrEmpty(response)
-                     ? string.Format("autorest.NewErrorWithError(err, \"{0}.{1}\", \"{2}\", nil , \"Failure {3} request\")", PackageName, Owner, ScopedName, phase)
-                     : string.Format("autorest.NewErrorWithError(err, \"{0}.{1}\", \"{2}\", {3}, \"Failure {4} request\")", PackageName, Owner, ScopedName, response, phase);
+            return !string.IsNullOrEmpty(parameter) 
+                        ? string.Format("autorest.NewErrorWithError(err, \"{0}.{1}\", \"{2}\", nil , \"{3}\'{4}\'\")", PackageName, Owner, ScopedName, phase, parameter)
+                        : string.IsNullOrEmpty(response)
+                                ? string.Format("autorest.NewErrorWithError(err, \"{0}.{1}\", \"{2}\", nil , \"Failure {3} request\")", PackageName, Owner, ScopedName, phase)
+                                : string.Format("autorest.NewErrorWithError(err, \"{0}.{1}\", \"{2}\", {3}, \"Failure {4} request\")", PackageName, Owner, ScopedName, response, phase);
         }
     }
 }
