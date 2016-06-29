@@ -5,32 +5,46 @@ AUTOREST     = "../../../binaries/net45/AutoRest.exe"
 # TODO: Change the code to build this hash by walking the directory structure
 SWAGGER_VERSIONS = {
 	authorization: {version: "2015-07-01"},
-	cdn: {version: "2015-06-01"},
-	compute: {version: "2015-06-15"},
+	batch: {version: "2015-12-01", swagger: "BatchManagement"},
+	cdn: {version: "2016-04-02"},
+	compute: {version: "2016-03-30"},
+	# containerservice: {version: "2016-03-30", swagger: "containerservice"},
+	cognitiveservices: {version: "2016-02-01-preview"},
+	#commerce: {version: "2015-06-01-preview"},
 	# datalake_analytics: {
 	# 	account: {version: "2015-10-01-preview"},
 	# 	catalog: {version: "2015-10-01-preview"},
-	# 	job:  {version: "2015-10-01-preview"}
+	# 	job:  {version: "2016-03-20-preview"}
 	# },
 	# datalake_store: {
 	# 	account: {version: "2015-10-01-preview"},
 	# 	filesystem: {version: "2015-10-01-preview"}
 	# },
-	dns: {version: "2015-05-04-preview"},
+	devtestlabs: {version: "2016-05-15", swagger: "DTL"},
+	dns: {version: "2016-04-01"},
+	#graphrbac: {version: "1.6"},
 	intune: {version: "2015-01-14-preview"},
-	logic: {version: "2015-02-01-preview"},
-	network: {version: "2015-06-15"},
+	logic: {version: "2015-08-01-preview"},
+	machinelearning: {version: "2016-05-01-preview", swagger: "webservices"},
+	mobileengagement: {version: "2014-12-01", swagger: "mobile-engagement"},
+	network: {version: "2016-03-30"},
 	notificationhubs: {version: "2014-09-01"},
-	redis: {version: "2015-08-01"},
+	powerbiembedded: {version: "2016-01-29"},
+	redis: {version: "2016-04-01"},
 	resources: {
-		authorization: {version: "2015-01-01"},
 		features: {version: "2015-12-01"},
-		resources: {version: "2015-11-01"},
+		locks: {version: "2015-01-01"},
+		resources: {version: "2016-02-01"},
+		policy: {version: "2015-10-01-preview"},
 		subscriptions: {version: "2015-11-01"}
 	},
-	scheduler: {version: "2016-01-01"},
+	scheduler: {version: "2016-03-01"},
 	search: {version: "2015-02-28"},
-	storage: {version: "2015-06-15"},
+	#servermanagement: {version: "2015-07-01-preview"},
+	servicebus: {version: "2014-09-01"},
+	sql: {version: "2015-05-01"},
+	storage: {version: "2016-01-01"},
+	trafficmanager: {version: "2015-11-01"},
 	web: {version: "2015-08-01", swagger: "service"}
 }
 

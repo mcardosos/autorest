@@ -200,7 +200,7 @@ namespace Microsoft.Rest.Generator.Go
 
             return string.Format(
                 parameter.RequiresUrlEncoding()
-                    ? string.Format("autorest.Encode(\"{0}\",{1})", parameter.Location, s)
+                    ? string.Format("autorest.Encode(\"{0}\",{1})", parameter.Location.ToString().ToLower(), s)
                     : string.Format("{0}", s),
                 value);
         }
