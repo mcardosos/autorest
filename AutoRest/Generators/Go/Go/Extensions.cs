@@ -195,13 +195,13 @@ namespace Microsoft.Rest.Generator.Go
                                           : "*{0}";
 
             var s = parameter.CollectionFormat != CollectionFormat.None
-                                  ? string.Format("{0},\"{1}\"", format, parameter.CollectionFormat.GetSeparator())
-                                  : string.Format("{0}", format);
+                                  ? $"{format},\"{parameter.CollectionFormat.GetSeparator()}\""
+                                  : $"{format}";
 
             return string.Format(
                 parameter.RequiresUrlEncoding()
-                    ? string.Format("autorest.Encode(\"{0}\",{1})", parameter.Location.ToString().ToLower(), s)
-                    : string.Format("{0}", s),
+                    ? $"autorest.Encode(\"{parameter.Location.ToString().ToLower()}\",{s})"
+                    : $"{s}",
                 value);
         }
 
