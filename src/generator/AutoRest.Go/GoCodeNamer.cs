@@ -16,13 +16,21 @@ namespace AutoRest.Go
 {
     public class GoCodeNamer : CodeNamer
     {
+        // Refactor -> generator
         public static readonly List<string> AutorestImports = new List<string> { "github.com/Azure/go-autorest/autorest" };
+
+        // Refactor -> generator
         public static readonly List<string> StandardImports = new List<string> { "github.com/Azure/go-autorest/autorest/azure", "net/http" };
+
+        // Refactor -> generator        
         public static readonly List<string> PageableImports = new List<string> { "net/http", "github.com/Azure/go-autorest/autorest/to" };
+        
+        // Refactor -> generator    
         public static readonly List<string> ValidationImport = new List<string> { "github.com/Azure/go-autorest/autorest/validation" };
 
         // CommonInitialisms are those "words" within a name that Golint expects to be uppercase.
         // See https://github.com/golang/lint/blob/master/lint.go for detail.
+        // Refactor -> Namer
         private static readonly List<String> CommonInitialisms = new List<String>() {
                                                                             "Acl",
                                                                             "Api",
@@ -63,6 +71,7 @@ namespace AutoRest.Go
                                                                             "Xss",
                                                                         };
 
+        // Refactor -> Namer
         public static readonly List<string> UserDefinedNames = new List<string>() {
                                                                             "UserAgent",
                                                                             "Version",
@@ -72,7 +81,7 @@ namespace AutoRest.Go
                                                                             "NewWithBaseURI",
                                                                             "New",
                                                                         };
-
+        // Refactor -> CodeModelTransformer
         private readonly Dictionary<IType, IType> _normalizedTypes;
 
         public static readonly Dictionary<HttpStatusCode, string> StatusCodeToGoString;
@@ -275,12 +284,14 @@ namespace AutoRest.Go
 
             foreach (var method in client.Methods)
             {
+                //Namer
                 var scope = new VariableScopeProvider();
                 foreach (var parameter in method.Parameters)
                 {
                     parameter.Name = scope.GetVariableName(parameter.Name);
                 }
 
+                //ModelTransformer
                 if (SyntheticType.ShouldBeSyntheticType(method.ReturnType.Body))
                 {
                     SyntheticType st = new SyntheticType(method.ReturnType.Body);

@@ -8,7 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
-using AutoRest.Core.ClientModel;
+using AutoRest.Core;
 using AutoRest.Core.Utilities;
 using AutoRest.Go.TemplateModels;
 using AutoRest.Extensions.Azure;
@@ -1065,7 +1065,7 @@ namespace AutoRest.Go
        /// <param name="attributeName"></param>
        /// <param name="packageName"></param>
        /// <returns></returns>
-        public static string UpdateNameIfDuplicate(this ServiceClient model, string attributeName, string packageName)
+        public static string UpdateNameIfDuplicate(this CodeModelTransformer model, string attributeName, string packageName)
         { 
             bool isDuplicateEnumName = false;
             foreach (var e in model.EnumTypes)

@@ -18,6 +18,7 @@ namespace AutoRest.Go
     {
         /// <summary>
         /// Inserts a block comment with specified prefix.
+        /// Refactor -> It looks like nobody is using this method :P
         /// </summary>
         /// <param name="prefix"></param>
         /// <param name="filler"></param>

@@ -3,6 +3,7 @@
 
 namespace AutoRest.Go
 {
+    /// Refactor -> Namer
     public interface IScopeProvider
     {
         string GetVariableName(string prefix, int suffix = 0);

@@ -7,6 +7,7 @@ using AutoRest.Core;
 using AutoRest.Core.ClientModel;
 using AutoRest.Go.TemplateModels;
 using AutoRest.Go.Templates;
+using AutoRest.Extensions.Azure;
 
 namespace AutoRest.Go
 {
@@ -47,7 +48,8 @@ namespace AutoRest.Go
         {
             // Add the current package name as a reserved keyword
             _namingFramework.ReserveNamespace(Settings.Namespace);
-            _namingFramework.NormalizeClientModel(serviceClientModel);
+            _namingFramework.NormalizeClientModel(serviceClientModel);            
+            AzureExtensions.ProcessGlobalParameters(serviceClientModel);
             _namingFramework.ResolveNameCollisions(serviceClientModel, Settings.Namespace,
                 Settings.Namespace + ".Models");
         }

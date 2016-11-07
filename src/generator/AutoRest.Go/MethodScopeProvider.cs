@@ -6,6 +6,7 @@ using System.Linq;
 
 namespace AutoRest.Go
 {
+    /// Refactor -> Namer
     public class MethodScopeProvider
     {
         /// <summary>
@@ -23,11 +24,13 @@ namespace AutoRest.Go
         /// </summary>
         private readonly HashSet<string> _collisionGroups = new HashSet<string>();
 
+        /// Refactor -> Nobody is using AddMethods
         public void AddMethods(IEnumerable<string> methodNames)
         {
             _allMethods.UnionWith(methodNames);
         }
 
+        /// Refactor -> Nobody is using AddGroupMethods
         public void AddGroupedMethods(IEnumerable<string> methodNames, string methodGroupName)
         {
             if (methodNames.Any(m => _allMethods.Contains(m)))
@@ -40,6 +43,7 @@ namespace AutoRest.Go
         /// <summary>
         /// Get a method name that is unique in this method's scope. If the method is part of a method group containing at least one method
         /// that conflicts with another method, attach the group name to the method. Then, as needed, append a numeric suffix to ensure uniqueness.
+        /// Refactor -> Namer
         /// </summary>
         /// <param name="prefix">The method prefix</param>
         /// <param name="group">The method group</param>
