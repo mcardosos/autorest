@@ -5,12 +5,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using AutoRest.Core.ClientModel;
 using AutoRest.Core.Utilities;
+using AutoRest.Core.Model;
 
-namespace AutoRest.Go.TemplateModels
+namespace AutoRest.Go.Model
 {
-    public class ModelTemplateModel : CompositeType
+    public class ModelGo : CompositeType
     {
         // Refactor -> Namer
         private readonly IScopeProvider _scope = new VariableScopeProvider();
@@ -28,12 +28,12 @@ namespace AutoRest.Go.TemplateModels
         public bool PreparerNeeded = false;
 
         // Refactor -> CodeModelTransformer
-        public ModelTemplateModel(CompositeType source)
+        public ModelGo(CompositeType source)
         {
             this.LoadFrom(source);
 
-            PropertyTemplateModels = new List<PropertyTemplateModel>();
-            source.Properties.ForEach(p => PropertyTemplateModels.Add(new PropertyTemplateModel(p)));
+            PropertyGoModels = new List<PropertyGo>();
+            source.Properties.ForEach(p => PropertyGoModels.Add(new PropertyGo(p)));
         }
 
         // Refactor -> Nobody uses this
@@ -54,6 +54,6 @@ namespace AutoRest.Go.TemplateModels
         }
 
         // Refactor -> CodeModelTransformer
-        public List<PropertyTemplateModel> PropertyTemplateModels { get; private set; }
+        public List<PropertyGo> PropertyGoModels { get; private set; }
     }
 }

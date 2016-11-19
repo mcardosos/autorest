@@ -8,9 +8,11 @@ using System.Linq;
 using System.Net;
 
 using AutoRest.Core;
+using AutoRest.Core.Utilities;
 using AutoRest.Core.Logging;
-using AutoRest.Core.ClientModel;
+using AutoRest.Core.Model;
 using AutoRest.Go.Properties;
+using AutoRest.Go;
 
 namespace AutoRest.Go
 {
@@ -82,10 +84,12 @@ namespace AutoRest.Go
                                                                             "New",
                                                                         };
         // Refactor -> CodeModelTransformer
-        private readonly Dictionary<IType, IType> _normalizedTypes;
+        private readonly Dictionary<IModelType, IModelType> _normalizedTypes;
 
+        // Refactor -> generator
         public static readonly Dictionary<HttpStatusCode, string> StatusCodeToGoString;
 
+        // Refactor -> generator.
         static GoCodeNamer()
         {
             // Create a map from HttpStatusCode to the appropriate Go http.StatusXxxxx string.
@@ -151,6 +155,7 @@ namespace AutoRest.Go
 
         /// <summary>
         /// Initializes a new instance of GoCodeNamingFramework.
+        /// Refactor -> Namer
         /// </summary>
         public GoCodeNamer()
         {
@@ -227,29 +232,33 @@ namespace AutoRest.Go
 
             }.ToList().ForEach(s => ReservedWords.Add(s));
 
-            _normalizedTypes = new Dictionary<IType, IType>();
+            // Refactor -> CodeModelTransformer
+            _normalizedTypes = new Dictionary<IModelType, IModelType>();
         }
 
+        // T=Refactor -> Namer
         public string PackageName { get; private set; }
 
-        public override void NormalizeClientModel(ServiceClient client)
+        // Refactor -> Namer
+        public void NormalizeCodeModel(CodeModel cm)
         {
-            PackageName = PackageNameFromNamespace(client.Namespace);
+            PackageName = PackageNameFromNamespace(cm.Namespace);
 
-            base.NormalizeClientModel(client);
+            // Looks like... deprecated by refactor :p
+            // base.NormalizeClientModel(cm);
 
             List<SyntheticType> syntheticTypes = new List<SyntheticType>();
 
             // Trim the package name from exported types; append a suitable qualifier, if needed, to avoid conflicts.
             var exportedTypes = new HashSet<object>();
-            exportedTypes.UnionWith(client.EnumTypes);
-            exportedTypes.UnionWith(client.Methods);
-            exportedTypes.UnionWith(client.ModelTypes);
+            exportedTypes.UnionWith(cm.EnumTypes);
+            exportedTypes.UnionWith(cm.Methods);
+            exportedTypes.UnionWith(cm.ModelTypes);
 
             var stutteringTypes = exportedTypes
                                     .Where(exported =>
-                                        (exported is IType && (exported as IType).Name.StartsWith(PackageName, StringComparison.InvariantCultureIgnoreCase)) ||
-                                        (exported is Method && (exported as Method).Name.StartsWith(PackageName, StringComparison.InvariantCultureIgnoreCase)));
+                                        (exported is IModelType && (exported as IModelType).Name.FixedValue.StartsWith(PackageName, StringComparison.InvariantCultureIgnoreCase)) ||
+                                        (exported is Method && (exported as Method).Name.FixedValue.StartsWith(PackageName, StringComparison.InvariantCultureIgnoreCase)));
 
             if (stutteringTypes.Count() > 0)
             {
@@ -257,23 +266,23 @@ namespace AutoRest.Go
                 stutteringTypes
                     .ToList().ForEach(exported =>
                     {
-                        var name = exported is IType
-                                        ? (exported as IType).Name
+                        var name = exported is IModelType
+                                        ? (exported as IModelType).Name
                                         : (exported as Method).Name;
 
                         Logger.LogWarning(string.Format(CultureInfo.InvariantCulture, Resources.StutteringName, name));
 
-                        name = name.TrimPackageName(PackageName);
+                        name = name.FixedValue.TrimPackageName(PackageName);
 
                         var nameInUse = exportedTypes
-                                            .Any(et => (et is IType && (et as IType).Name.Equals(name)) || (et is Method && (et as Method).Name.Equals(name)));
+                                            .Any(et => (et is IModelType && (et as IModelType).Name.Equals(name)) || (et is Method && (et as Method).Name.Equals(name)));
                         if (exported is EnumType)
                         {
-                            (exported as EnumType).Name = AttachTypeName(name, PackageName, nameInUse, "Enum");
+                            (exported as EnumType).Name.FixedValue = AttachTypeName(name, PackageName, nameInUse, "Enum");
                         }
                         else if (exported is CompositeType)
                         {
-                            (exported as CompositeType).Name = AttachTypeName(name, PackageName, nameInUse, "Type");
+                            (exported as CompositeType).Name.FixedValue = AttachTypeName(name, PackageName, nameInUse, "Type");
                         }
                         else if (exported is Method)
                         {
@@ -282,16 +291,16 @@ namespace AutoRest.Go
                     });
             }
 
-            foreach (var method in client.Methods)
+            foreach (var method in cm.Methods)
             {
-                //Namer
+                //Refactor -> Namer
                 var scope = new VariableScopeProvider();
                 foreach (var parameter in method.Parameters)
                 {
                     parameter.Name = scope.GetVariableName(parameter.Name);
                 }
 
-                //ModelTransformer
+                //Refactor -> CodeModelTransformer
                 if (SyntheticType.ShouldBeSyntheticType(method.ReturnType.Body))
                 {
                     SyntheticType st = new SyntheticType(method.ReturnType.Body);
@@ -301,22 +310,24 @@ namespace AutoRest.Go
                     }
                     else
                     {
-                        syntheticTypes.Add(st);
-                        client.ModelTypes.Add(st);
+                        syntheticTypes.ToList().Add(st);
+                        cm.ModelTypes.ToList().Add(st);
                         method.ReturnType = new Response(st, method.ReturnType.Headers);
                     }
                 }
             }
 
-            normalizedTypesForUserDefinedNames(client);
+            // Refactor -> Namer
+            normalizedTypesForUserDefinedNames(cm);
         }
 
         /// <summary>
         /// Returns language specific type reference name.
+        /// Refactor -> CodeModelTransformer
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override IType NormalizeTypeReference(IType type)
+        public override IModelType NormalizeTypeReference(IModelType type)
         {
             if (type == null)
             {
@@ -330,7 +341,7 @@ namespace AutoRest.Go
             //  Go cannot, as a result, handle self-referential types (e.g., a DictionaryType whose value type is the same dictionary type).
             //  Normalization methods for each type family will inject the proper values into the normalized type collection, if the type is
             //  present and the value is null, it means normalization is incomplete.
-            IType normalizedType = null;
+            IModelType normalizedType = null;
             if (_normalizedTypes.ContainsKey(type))
             {
                 normalizedType = _normalizedTypes[type];
@@ -377,41 +388,46 @@ namespace AutoRest.Go
 
         /// <summary>
         /// Returns language specific type declaration name.
+        /// Refactor -> CodeModelTransformer (is this even used? will it be deprectaed?)
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public override IType NormalizeTypeDeclaration(IType type)
+        public override IModelType NormalizeTypeDeclaration(IModelType type)
         {
             return NormalizeTypeReference(type);
         }
 
-        private IType NormalizeCompositeType(CompositeType compositeType)
+        // Refactor -> CodeModelTransformer
+        private IModelType NormalizeCompositeType(CompositeType compositeType)
         {
             // Composite types normalize to the same object
             _normalizedTypes[compositeType] = compositeType;
 
-            compositeType.Name = GetTypeName(compositeType.Name);
+            compositeType.Name.FixedValue = GetTypeName(compositeType.Name);
 
             foreach (var property in compositeType.Properties)
             {
+                // Is this line okay here? I looks like this should be in the core :p
                 property.SerializedName = property.Name;
+                // Refactor -> Namer
                 property.Name = GetPropertyName(property.Name);
                 // gosdk: For now, inherit Enumerated type names from the composite type field name
-                if (property.Type is EnumType)
+                if (property.ModelType is EnumType)
                 {
-                    var enumType = property.Type as EnumType;
+                    var enumType = property.ModelType as EnumType;
                     if (String.IsNullOrEmpty(enumType.Name))
                     {
-                        enumType.Name = property.Name;
+                        enumType.Name.FixedValue = property.Name;
                     }
                 }
-                property.Type = NormalizeTypeReference(property.Type);
+                property.ModelType = NormalizeTypeReference(property.ModelType);
             }
 
             return compositeType;
         }
 
-        private IType NormalizeEnumType(EnumType enumType)
+        // Refactor -> CodeModelTransformer
+        private IModelType NormalizeEnumType(EnumType enumType)
         {
             // Enumerated types normalize to the same object
             _normalizedTypes[enumType] = enumType;
@@ -419,17 +435,18 @@ namespace AutoRest.Go
             // gosdk: Default unnamed Enumerated types to "string"
             if (String.IsNullOrEmpty(enumType.Name) || enumType.Values.Any(v => v == null || string.IsNullOrEmpty(v.Name)))
             {
-                enumType.Name = "string";
+                enumType.Name.FixedValue = "string";
                 enumType.SerializedName = "string";
             }
             else
             {
                 enumType.SerializedName = enumType.Name;
-                enumType.Name = GetTypeName(enumType.Name);
+                enumType.Name.FixedValue = GetTypeName(enumType.Name);
 
                 foreach (var value in enumType.Values)
                 {
                     value.SerializedName = value.Name;
+                    // Refactor -> Namer
                     value.Name = GetEnumMemberName(value.Name);
                 }
             }
@@ -437,29 +454,30 @@ namespace AutoRest.Go
             return enumType;
         }
 
-        private IType NormalizePrimaryType(PrimaryType primaryType)
+        // Refactor -> CodeModelTransformer
+        private IModelType NormalizePrimaryType(PrimaryType primaryType)
         {
-            if (primaryType.Type == KnownPrimaryType.Object)
+            if (primaryType.KnownPrimaryType == KnownPrimaryType.Object)
             {
                 return new MapType(new InterfaceType());
             }
-            else if (primaryType.Type == KnownPrimaryType.Date)
+            else if (primaryType.KnownPrimaryType == KnownPrimaryType.Date)
             {
                 return new PackageType { Import = "github.com/Azure/go-autorest/autorest/date", Member = "Date" };
             }
-            else if (primaryType.Type == KnownPrimaryType.DateTimeRfc1123)
+            else if (primaryType.KnownPrimaryType == KnownPrimaryType.DateTimeRfc1123)
             {
                 return new PackageType { Import = "github.com/Azure/go-autorest/autorest/date", Member = "TimeRFC1123" };
             }
-            else if (primaryType.Type == KnownPrimaryType.DateTime)
+            else if (primaryType.KnownPrimaryType == KnownPrimaryType.DateTime)
             {
                 return new PackageType { Import = "github.com/Azure/go-autorest/autorest/date", Member = "Time" };
             }
-            else if (primaryType.Type == KnownPrimaryType.Decimal)
+            else if (primaryType.KnownPrimaryType == KnownPrimaryType.Decimal)
             {
                 return new PackageType { Import = "github.com/shopspring/decimal", Member = "Decimal" };
             }
-            else if (primaryType.Type == KnownPrimaryType.Uuid)
+            else if (primaryType.KnownPrimaryType == KnownPrimaryType.Uuid)
             {
                 return new PackageType { Import = "github.com/satori/uuid", Member = "UUID" };
             }
@@ -468,51 +486,51 @@ namespace AutoRest.Go
                 // The remaining Primary types normalize to the same object
                 _normalizedTypes[primaryType] = primaryType;
 
-                if (primaryType.Type == KnownPrimaryType.Boolean)
+                if (primaryType.KnownPrimaryType == KnownPrimaryType.Boolean)
                 {
-                    primaryType.Name = "bool";
+                    primaryType.Name.FixedValue = "bool";
                 }
-                else if (primaryType.Type == KnownPrimaryType.ByteArray)
+                else if (primaryType.KnownPrimaryType == KnownPrimaryType.ByteArray)
                 {
-                    primaryType.Name = "[]byte";
+                    primaryType.Name.FixedValue = "[]byte";
                 }
-                else if (primaryType.Type == KnownPrimaryType.Double)
+                else if (primaryType.KnownPrimaryType == KnownPrimaryType.Double)
                 {
-                    primaryType.Name = "float64";
+                    primaryType.Name.FixedValue = "float64";
                 }
-                else if (primaryType.Type == KnownPrimaryType.Int)
+                else if (primaryType.KnownPrimaryType == KnownPrimaryType.Int)
                 {
-                    primaryType.Name = "int32";
+                    primaryType.Name.FixedValue = "int32";
                 }
-                else if (primaryType.Type == KnownPrimaryType.Long)
+                else if (primaryType.KnownPrimaryType == KnownPrimaryType.Long)
                 {
-                    primaryType.Name = "int64";
+                    primaryType.Name.FixedValue = "int64";
                 }
-                else if (primaryType.Type == KnownPrimaryType.Stream)
+                else if (primaryType.KnownPrimaryType == KnownPrimaryType.Stream)
                 {
                     // Note:
                     // -- All streaming will be through instances of an io.ReadCloser
                     // -- When streaming to the server, the method will take an io.ReadCloser as the http.Request body
                     // -- When streaming from the servier, the method will return access to the (open) http.Response body
-                    primaryType.Name = "io.ReadCloser";
+                    primaryType.Name.FixedValue = "io.ReadCloser";
                 }
-                else if (primaryType.Type == KnownPrimaryType.String)
+                else if (primaryType.KnownPrimaryType == KnownPrimaryType.String)
                 {
-                    primaryType.Name = "string";
+                    primaryType.Name.FixedValue = "string";
                 }
-                else if (primaryType.Type == KnownPrimaryType.TimeSpan)
+                else if (primaryType.KnownPrimaryType == KnownPrimaryType.TimeSpan)
                 {
-                    primaryType.Name = "string";
+                    primaryType.Name.FixedValue = "string";
                 }
-                else if (primaryType.Type == KnownPrimaryType.Base64Url)
+                else if (primaryType.KnownPrimaryType == KnownPrimaryType.Base64Url)
                 {
                     //TODO: add base64Url type.
-                    primaryType.Name = "string";
+                    primaryType.Name.FixedValue = "string";
                 }
-                else if (primaryType.Type == KnownPrimaryType.UnixTime)
+                else if (primaryType.KnownPrimaryType == KnownPrimaryType.UnixTime)
                 {
                     //TODO: add unixtime type.
-                    primaryType.Name = "string";
+                    primaryType.Name.FixedValue = "string";
                 }
                 else
                 {
@@ -523,23 +541,26 @@ namespace AutoRest.Go
             }
         }
 
-        private IType NormalizeSequenceType(SequenceType sequenceType)
+        // Refactor -> CodeModelTransformer
+        private IModelType NormalizeSequenceType(SequenceType sequenceType)
         {
             // Sequence types normalize to the same object
             _normalizedTypes[sequenceType] = sequenceType;
 
             sequenceType.ElementType = NormalizeTypeReference(sequenceType.ElementType);
-            sequenceType.NameFormat = "[]{0}";
+            sequenceType.Name.OnGet += value => $"[]{0}";
             return sequenceType;
         }
 
-        private IType NormalizeDictionaryType(DictionaryType dictionaryType)
+        // Refactor -> CodeModelTransformer
+        private IModelType NormalizeDictionaryType(DictionaryType dictionaryType)
         {
             return new MapType(NormalizeTypeReference(dictionaryType.ValueType));
         }
 
         /// <summary>
         /// Formats a string to work around golint name stuttering
+        /// Refactor -> CodeModelTransformer
         /// </summary>
         /// <param name="name"></param>
         /// <param name="packageName"></param>
@@ -557,6 +578,7 @@ namespace AutoRest.Go
 
         /// <summary>
         /// Formats a string to pascal case using a specific character as splitter
+        /// Refactor -> Namer ... Even better if this already exists in the core :D
         /// </summary>
         /// <param name="name"></param>
         /// <param name="splitter"></param>
@@ -576,11 +598,13 @@ namespace AutoRest.Go
                     .Aggregate(string.Concat);
         }
 
+        // Refactor -> Namer
         public override string GetEnumMemberName(string name)
         {
             return EnsureNameCase(base.GetEnumMemberName(name));
         }
 
+        // Refactor -> Namer
         public override string GetFieldName(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -590,6 +614,7 @@ namespace AutoRest.Go
             return EnsureNameCase(PascalCase(RemoveInvalidCharacters(GetEscapedReservedName(name, "Field"))));
         }
 
+        // Refactor -> Namer
         public override string GetInterfaceName(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -601,6 +626,7 @@ namespace AutoRest.Go
 
         /// <summary>
         /// Formats a string for naming a method using Pascal case by default.
+        /// Refactor -> Namer
         /// </summary>
         /// <param name="name"></param>
         /// <returns>The formatted string.</returns>
@@ -613,6 +639,7 @@ namespace AutoRest.Go
             return EnsureNameCase(GetEscapedReservedName(PascalCase(RemoveInvalidCharacters(name)), "Method"));
         }
 
+        // Refactor -> Namer
         public override string GetMethodGroupName(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
@@ -628,6 +655,7 @@ namespace AutoRest.Go
 
         /// <summary>
         /// Formats a string for naming method parameters using GetVariableName Camel case by default.
+        /// Refactor -> Namer
         /// </summary>
         /// <param name="name"></param>
         /// <returns>The formatted string.</returns>
@@ -642,6 +670,7 @@ namespace AutoRest.Go
 
         /// <summary>
         /// Formats a string for naming properties using Pascal case by default.
+        /// Refactor -> Namer
         /// </summary>
         /// <param name="name"></param>
         /// <returns>The formatted string.</returns>
@@ -656,6 +685,7 @@ namespace AutoRest.Go
 
         /// <summary>
         /// Formats a string for naming a Type or Object using Pascal case by default.
+        /// Refactor -> Namer
         /// </summary>
         /// <param name="name"></param>
         /// <returns>The formatted string.</returns>
@@ -670,6 +700,7 @@ namespace AutoRest.Go
 
         /// <summary>
         /// Formats a string for naming a local variable using Camel case by default.
+        /// Refactor -> Namer
         /// </summary>
         /// <param name="name"></param>
         /// <returns>The formatted string.</returns>
@@ -684,6 +715,7 @@ namespace AutoRest.Go
 
         /// <summary>
         /// Converts names the conflict with Go reserved terms by appending the passed appendValue.
+        /// Refactor -> Namer
         /// </summary>
         /// <param name="name">Name.</param>
         /// <param name="appendValue">String to append.</param>
@@ -709,6 +741,7 @@ namespace AutoRest.Go
             return name;
         }
 
+        // Refactor -> Namer
         public void ReserveNamespace(string ns)
         {
             ReservedWords.Add(PackageNameFromNamespace(ns));
@@ -718,6 +751,7 @@ namespace AutoRest.Go
         // A "word" is a sequence of characters separated by a change in case or underscores. Since this
         // method alters name casing, it should be used after any other method that expects normal
         // camelCase or PascalCase.
+        // Refactor -> Namer
         private static string EnsureNameCase(string name)
         {
             List<string> words = new List<string>();
@@ -736,16 +770,20 @@ namespace AutoRest.Go
             return String.Join(String.Empty, words.ToArray());
         }
 
+        // Refactor -> Generator
         public static string FormatFileName(string fileName)
         {
             return FormatFileName(String.Empty, fileName);
         }
 
+        // Refactor -> Generator
         public static string FormatFileName(string path, string fileName)
         {
             return path + fileName + ".go";
         }
 
+        // Refactor -> generator
+        // Anyways, it looks like no one is using this :P
         public static string FormatImportName(string baseImport, string basePackage, params string[] packages)
         {
             List<string> items = new List<string> { baseImport, basePackage };
@@ -753,15 +791,17 @@ namespace AutoRest.Go
             return String.Join("/", items.ToArray<string>());
         }
 
+        // Refactor -> Namer
         public static string FormatPackageName(string packageName)
         {
             if (string.IsNullOrWhiteSpace(packageName))
             {
                 return packageName;
             }
-            return RemoveInvalidCharacters(packageName).ToLowerInvariant();
+            return CodeNamer.Instance.RemoveInvalidCharacters(packageName).ToLowerInvariant();
         }
 
+        // Refactor -> Namer
         public static List<string> NamespaceParts(string ns)
         {
             // -- The namespace is assumed to be the full-path under go/src (e.g., github.com/azure/azure-sdk-for-go/arm/storage)
@@ -769,12 +809,14 @@ namespace AutoRest.Go
             return new List<string>(ns.Replace('\\', '/').Split('/'));
         }
 
+        // Refactor -> Namer
         public static string PackageNameFromNamespace(string ns)
         {
             List<string> namespaceParts = NamespaceParts(ns);
             return namespaceParts[namespaceParts.Count() - 1];
         }
 
+        // Refactor -> Generator
         public static string[] SDKVersionFromPackageVersion(string v)
         {
             if (string.IsNullOrEmpty(v))
@@ -789,7 +831,9 @@ namespace AutoRest.Go
             return version;
         }
 
-        public override string EscapeDefaultValue(string defaultValue, IType type)
+        // Refactor -> Namer
+        // Still, looks dusy and forgotten
+        public override string EscapeDefaultValue(string defaultValue, IModelType type)
         {
             if (type == null)
             {
@@ -804,17 +848,17 @@ namespace AutoRest.Go
                 }
                 else if (primaryType != null)
                 {
-                    if (primaryType.Type == KnownPrimaryType.String
-                        || primaryType.Type == KnownPrimaryType.Uuid
-                        || primaryType.Type == KnownPrimaryType.TimeSpan)
+                    if (primaryType.KnownPrimaryType == KnownPrimaryType.String
+                        || primaryType.KnownPrimaryType == KnownPrimaryType.Uuid
+                        || primaryType.KnownPrimaryType == KnownPrimaryType.TimeSpan)
                     {
-                        return CodeNamer.QuoteValue(defaultValue);
+                        return CodeNamer.Instance.QuoteValue(defaultValue);
                     }
-                    else if (primaryType.Type == KnownPrimaryType.Boolean)
+                    else if (primaryType.KnownPrimaryType == KnownPrimaryType.Boolean)
                     {
                         return defaultValue.ToLowerInvariant();
                     }
-                    else if (primaryType.Type == KnownPrimaryType.ByteArray)
+                    else if (primaryType.KnownPrimaryType == KnownPrimaryType.ByteArray)
                     {
                         return "[]bytearray(\"" + defaultValue + "\")";
                     }
@@ -829,16 +873,17 @@ namespace AutoRest.Go
 
         /// <summary>
         /// This method adds digit 1 to type name if type name from swagger 
-        /// conflicts with user defined variable names or method names defined by us. 
+        /// conflicts with user defined variable names or method names defined by us.
+        /// Refactor -> Namer 
         /// </summary>
         /// <param name="client"></param>
-        private void normalizedTypesForUserDefinedNames(ServiceClient client)
+        private void normalizedTypesForUserDefinedNames(CodeModel cm)
         {
-            client.ModelTypes.ToList().ForEach(t =>
+            cm.ModelTypes.ToList().ForEach(t =>
             {
-                t.Name = UserDefinedNames.Contains(t.Name)
-                                 ? $"{t.Name}{PackageName.Capitalize()}"
-                                 : t.Name;
+                t.Name.FixedValue = UserDefinedNames.Contains(t.Name.FixedValue)
+                                 ? $"{t.Name.FixedValue}{PackageName.Capitalize()}"
+                                 : t.Name.FixedValue;
             });
         }
     }

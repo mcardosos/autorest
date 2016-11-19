@@ -7,13 +7,13 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 
-using AutoRest.Core.ClientModel;
 using AutoRest.Go.Properties;
 using AutoRest.Core.Utilities;
+using AutoRest.Core.Model;
 
-namespace AutoRest.Go.TemplateModels
+namespace AutoRest.Go.Model
 {
-    public class MethodTemplateModel : Method
+    public class MethodGo : Method
     {
         public readonly MethodScopeProvider MethodScope;
         public readonly string Owner;
@@ -24,7 +24,7 @@ namespace AutoRest.Go.TemplateModels
 
         public readonly bool NextAlreadyDefined = true;
 
-        public MethodTemplateModel(Method source, string owner, string packageName, MethodScopeProvider methodScope, bool next)        
+        public MethodGo(Method source, string owner, string packageName, MethodScopeProvider methodScope, bool next)        
         {
             this.LoadFrom(source);
 
@@ -33,7 +33,7 @@ namespace AutoRest.Go.TemplateModels
             PackageName = packageName;
             NextAlreadyDefined = next;
 
-            var parameter = Parameters.Find(p => p.Type.IsPrimaryType(KnownPrimaryType.Stream)
+            var parameter = Parameters.ToList().Find(p => p.ModelType.IsPrimaryType(KnownPrimaryType.Stream)
                                                 && !(p.Location == ParameterLocation.Body || p.Location == ParameterLocation.FormData));
             if (parameter != null)
             {
@@ -83,9 +83,9 @@ namespace AutoRest.Go.TemplateModels
                 List<string> declarations = new List<string>();
                 LocalParameters
                     .ForEach(p => declarations.Add(string.Format(
-                                                        p.IsRequired || p.Type.CanBeEmpty()
+                                                        p.IsRequired || p.ModelType.CanBeEmpty()
                                                             ? "{0} {1}"
-                                                            : "{0} *{1}", p.Name, p.Type.Name)));
+                                                            : "{0} *{1}", p.Name, p.ModelType.Name)));
                 //for Cancelation channel option for long-running operations
                 if (this.IsLongRunningOperation())
                 {
@@ -155,12 +155,12 @@ namespace AutoRest.Go.TemplateModels
         /// <summary>
         /// Return the parameters as they appear in the method signature excluding global parameters.
         /// </summary>
-        public IEnumerable<Parameter> LocalParameters
+        public IEnumerable<ParameterGo> LocalParameters
         {
             get
             {
                 return
-                    Parameters.Where(
+                    Parameters.Cast<ParameterGo>().Where(
                         p => p != null && p.IsMethodArgument() && !string.IsNullOrWhiteSpace(p.Name))
                                 .OrderBy(item => !item.IsRequired);
             }
@@ -258,10 +258,13 @@ namespace AutoRest.Go.TemplateModels
             get
             {
                 var codes = new List<string>();
+                // Refactor -> CodeModelTransformer
+                // Actually, this is the kind of stuff that would be better in the core...
                 if (!Responses.ContainsKey(HttpStatusCode.OK))
                 {
                     codes.Add(GoCodeNamer.StatusCodeToGoString[HttpStatusCode.OK]);
                 }
+                // Refactor -> generator
                 foreach (var sc in Responses.Keys)
                 {
                     codes.Add(GoCodeNamer.StatusCodeToGoString[sc]);
@@ -276,7 +279,7 @@ namespace AutoRest.Go.TemplateModels
             {
                 var decorators = new List<string>();
 
-                if (BodyParameter != null && !BodyParameter.Type.IsPrimaryType(KnownPrimaryType.Stream))
+                if (BodyParameter != null && !BodyParameter.ModelType.IsPrimaryType(KnownPrimaryType.Stream))
                 {
                     decorators.Add("autorest.AsJSON()");
                 }
@@ -291,7 +294,7 @@ namespace AutoRest.Go.TemplateModels
 
                 if (BodyParameter != null && BodyParameter.IsRequired)
                 {
-                    decorators.Add(string.Format(BodyParameter.Type.IsPrimaryType(KnownPrimaryType.Stream) && BodyParameter.Location == ParameterLocation.Body
+                    decorators.Add(string.Format(BodyParameter.ModelType.IsPrimaryType(KnownPrimaryType.Stream) && BodyParameter.Location == ParameterLocation.Body
                                         ? "autorest.WithFile({0})"
                                         : "autorest.WithJSON({0})",
                                 BodyParameter.Name));
@@ -305,7 +308,7 @@ namespace AutoRest.Go.TemplateModels
                 if (FormDataParameters.Any())
                 {
                     decorators.Add(
-                        FormDataParameters.Any(p => p.Type.IsPrimaryType(KnownPrimaryType.Stream))
+                        FormDataParameters.Any(p => p.ModelType.IsPrimaryType(KnownPrimaryType.Stream))
                             ? "autorest.WithMultiPartFormData(formDataParameters)"
                             : "autorest.WithFormData(autorest.MapToValues(formDataParameters))"
                         );

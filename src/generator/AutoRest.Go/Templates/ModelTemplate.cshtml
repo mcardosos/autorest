@@ -1,9 +1,10 @@
 ﻿@using AutoRest.Go
-@using AutoRest.Core.ClientModel
+@using AutoRest.Core.Model
+@using AutoRest.Go.Model
 @using AutoRest.Go.Templates
 @using AutoRest.Core.Utilities
 
-@inherits AutoRest.Go.Template<AutoRest.Go.TemplateModels.ModelTemplateModel>
+@inherits AutoRest.Core.Template<AutoRest.Go.Model.ModelGo>
 
 @WrapComment("// ", string.Format("{0} is {1}", Model.Name, Model.Documentation.ToSentence()))
 type @Model.Name struct {

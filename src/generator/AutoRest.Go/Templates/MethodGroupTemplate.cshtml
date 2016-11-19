@@ -3,13 +3,12 @@
 @using System.Linq;
 
 @using AutoRest.Go
-@using AutoRest.Go.TemplateModels
+@using AutoRest.Go.Model
 @using AutoRest.Go.Templates
 
-@inherits AutoRest.Go.Template<AutoRest.Go.TemplateModels.MethodGroupTemplateModel>
+@inherits AutoRest.Core.Template<AutoRest.Go.Model.MethodGroupGo>
 @{
-    var imports = Model.Imports;
-    var modelName = GoCodeNamer.CamelCase(Model.Name);
+    var modelName = GoCodeNamer.Instance.CamelCase(Model.Name);
 }
 
 package @Model.PackageName
@@ -19,7 +18,7 @@ package @Model.PackageName
 @EmptyLine
 
 import (
-@foreach (var import in imports)
+@foreach (var import in Model.Imports)
 {
     @:"@(import)"
 }
@@ -45,6 +44,6 @@ func New@(Model.ClientName)WithBaseURI(baseURI string, @(Model.GlobalParameters)
 
 @foreach (var method in Model.MethodTemplateModels)
 {
-@:@(Include<MethodTemplate, MethodTemplateModel>(new MethodTemplate(), method))
+@:@(Include(new MethodTemplate(), method))
 @:@EmptyLine
 }

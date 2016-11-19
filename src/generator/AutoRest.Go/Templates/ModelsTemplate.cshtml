@@ -3,14 +3,14 @@
 @using System.Linq;
 
 @using AutoRest.Go
-@using AutoRest.Core.ClientModel
-@using AutoRest.Go.TemplateModels
+@using AutoRest.Core.Model
+@using AutoRest.Go.Model
 @using AutoRest.Go.Templates
 @using AutoRest.Core.Utilities
 
-@inherits AutoRest.Go.Template<AutoRest.Go.TemplateModels.ModelsTemplateModel>
+@inherits AutoRest.Core.Template<AutoRest.Go.Model.CodeModelGo>
 @{
-    var imports = Model.Imports;
+    var imports = Model.ModelImports;
 }
 package @Model.PackageName
 @EmptyLine
@@ -30,13 +30,13 @@ foreach (var import in imports)
 }
 
 @foreach (var enumTemplateModel in Model.EnumTemplateModels) {
-@:@(Include<EnumTemplate, EnumTemplateModel>(new EnumTemplate(), enumTemplateModel))
+@:@(Include(new EnumTemplate(), enumTemplateModel))
 @EmptyLine
 @:
 }
 
 @foreach (var modelTemplateModel in Model.ModelTemplateModels) {
-@:@(Include<ModelTemplate, ModelTemplateModel>(new ModelTemplate(), modelTemplateModel))
+@:@(Include(new ModelTemplate(), modelTemplateModel))
 @EmptyLine
 @:
 }

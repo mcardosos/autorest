@@ -2,7 +2,8 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System;
-using AutoRest.Core.ClientModel;
+using AutoRest.Core.Model;
+using AutoRest.Go.Model;
 
 namespace AutoRest.Go
 {
@@ -11,7 +12,7 @@ namespace AutoRest.Go
     /// </summary>
     public class SyntheticType : CompositeType
     {
-        public SyntheticType(IType baseType)
+        public SyntheticType(IModelType baseType)
         {
             if (!ShouldBeSyntheticType(baseType))
             {
@@ -21,11 +22,11 @@ namespace AutoRest.Go
             // gosdk: Ensure the generated name does not collide with existing type names
             BaseType = baseType;
 
-            IType elementType = getElementType(baseType);
+            IModelType elementType = getElementType(baseType);
 
             if (elementType is PrimaryType)
             {
-                var type = (elementType as PrimaryType).Type;
+                var type = (elementType as PrimaryType).KnownPrimaryType;
                 if (type == KnownPrimaryType.Boolean)
                 {
                     Name += "Bool";
@@ -84,26 +85,27 @@ namespace AutoRest.Go
                 Name += elementType.Name;
             }
 
-            Property p = new Property();
-            p.SerializedName = "value";
-            p.Name = "Value";
-            p.Type = baseType;
-            Properties.Add(p);
+            // Property p = new<Property>(new{
+            //     Name = "Value",
+            //     ModelType = baseType,
+            //     SerializedName = "value",
+            // });
+            // Properties.Add(p);
         }
 
-        public IType BaseType { get; set; }
+        public IModelType BaseType { get; set; }
         
-        public static bool ShouldBeSyntheticType(IType type)
+        public static bool ShouldBeSyntheticType(IModelType type)
         {
             return (type is PrimaryType || type is PackageType || type is SequenceType || type is DictionaryType || type is EnumType);
         }
 
-        public static bool IsAllowedPrimitiveType(IType type)
+        public static bool IsAllowedPrimitiveType(IModelType type)
         {
             return !(type is DictionaryType || type is SequenceType || type.IsPrimaryType(KnownPrimaryType.Stream));
         }
 
-        public IType getElementType(IType type)
+        public IModelType getElementType(IModelType type)
         {
             if (type is SequenceType)
             {

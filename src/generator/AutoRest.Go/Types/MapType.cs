@@ -4,8 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using AutoRest.Core.Model;
 
-using AutoRest.Core.ClientModel;
 
 namespace AutoRest.Go
 {
@@ -18,12 +18,12 @@ namespace AutoRest.Go
 
         public string FieldName { get { return string.Format(CultureInfo.InvariantCulture, FieldNameFormat, ValueType.Name); } }
 
-        public MapType(IType type)
+        public MapType(IModelType type)
         {
             ValueType = type;
-            NameFormat = "map[string]{0}";
+            Name.OnGet += value => $"map[string]{0}";
             FieldNameFormat = ValueType.CanBeNull()
-                                ? NameFormat
+                                ? "map[string]{0}"
                                 : "map[string]*{0}";
         }
 

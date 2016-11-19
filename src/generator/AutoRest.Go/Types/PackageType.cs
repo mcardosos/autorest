@@ -3,15 +3,15 @@
 
 using System;
 using System.Collections.Generic;
-
-using AutoRest.Core.ClientModel;
+using AutoRest.Core.Model;
+using AutoRest.Core.Utilities;
 
 namespace AutoRest.Go
 {
     /// <summary>
     /// Defines type defined by a Go package.
     /// </summary>
-    public class PackageType : IType
+    public class PackageType : IModelType
     {
         /// <summary>
         /// Gets or sets the model type import.
@@ -32,7 +32,7 @@ namespace AutoRest.Go
         /// <summary>
         /// Gets or sets the model type name.
         /// </summary>
-        public string Name
+        public Fixable<string> Name
         {
             get
             {
@@ -86,6 +86,24 @@ namespace AutoRest.Go
         public override int GetHashCode()
         {
             return (Import + "." + Member).GetHashCode();
+        }
+
+        public string ExtendedDocumentation { get; }
+        public string DefaultValue { get; }
+        public bool IsConstant { get; }
+        public string ClassName { get; }
+        public CodeModel CodeModel { get; }
+        public IEnumerable<IIdentifier> IdentifiersInScope { get; }
+        public IParent Parent { get; }
+        public IEnumerable<IChild> Children { get; }
+        public string Qualifier { get; }
+        public IEnumerable<string> MyReservedNames { get; }
+        public HashSet<string> LocallyUsedNames { get; }
+        public string QualifierType { get; }
+        public string DeclarationName { get; }
+        public void Disambiguate()
+        {
+
         }
     }
 }

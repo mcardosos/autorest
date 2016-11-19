@@ -8,9 +8,12 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
-using AutoRest.Core;
+using AutoRest.Core.Model;
+using AutoRest.Core.Properties;
+using static AutoRest.Core.Utilities.DependencyInjection;
 using AutoRest.Core.Utilities;
-using AutoRest.Go.TemplateModels;
+using AutoRest.Core.Utilities.Collections;
+using AutoRest.Go.Model;
 using AutoRest.Extensions.Azure;
 using AutoRest.Extensions.Azure.Model;
 
@@ -18,13 +21,20 @@ namespace AutoRest.Go
 {
     public static class Extensions
     {
+        // Refactor -> CodeModelTransformer
         public const string ApiVersionName = "APIVersion";
+        // Refactor -> CodeModelTransformer
         public const string ApiVersionSerializedName = "api-version";
+        // Refactor -> CodeModelTransformer
         public const string NullConstraint = "Null";
+        // Refactor -> CodeModelTransformer
         public const string ReadOnlyConstraint = "ReadOnly";
 
+        // Refactor -> As how it works currently, generator.
+        // This should be with the CodeModelTransformer
         public const string SkipUrlEncoding = "x-ms-skip-url-encoding";
         
+        // Refactor -> Namer
         private static readonly Regex SplitPattern = new Regex(@"(\p{Lu}\p{Ll}+)");
 
         private static Dictionary<string, string> plural = new Dictionary<string, string>()
@@ -73,6 +83,7 @@ namespace AutoRest.Go
 
         /// <summary>
         /// String manipulation function converts all words in a sentence to lowercase.
+        /// Refactor -> Namer
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
@@ -100,6 +111,7 @@ namespace AutoRest.Go
         /// This method checks if MethodGroupName is plural of package name. 
         /// It returns false for packages not listed in dictionary 'plural'.
         /// Example, group EventHubs in package EventHub.
+        /// Refactor -> Namer, but also could be used by the CodeModelTransformer
         /// </summary>
         /// <param name="value"></param>
         /// <param name="packageName"></param>
@@ -126,6 +138,7 @@ namespace AutoRest.Go
 
         /// <summary>
         /// Gets package name from the value string.
+        /// Refactor -> Namer, but could be used by the CodeModelTransformer too
         /// </summary>
         /// <param name="value"></param>
         /// <param name="packageName"></param>
@@ -143,6 +156,7 @@ namespace AutoRest.Go
 
         /// <summary>
         /// Converts List to formatted string of arguments.
+        /// Refactor -> Generator
         /// </summary>
         /// <param name="arguments"></param>
         /// <returns></returns>
@@ -167,6 +181,8 @@ namespace AutoRest.Go
         // This function removes html anchor tags and reformats the comment text.
         // For example, Swagger documentation text --> "This is a documentation text. For information see <a href=LINK">CONTENT.</a>"
         // reformats to  --> "This is a documentation text. For information see CONTENT (LINK)."
+        // Refactor -> Namer
+        // Still, nobody uses this...
         public static string UnwrapAnchorTags(this string comments)
         {
             string pattern = "([^<>]*)<a\\s*.*\\shref\\s*=\\s*[\'\"]([^\'\"]*)[\'\"][^>]*>(.*)</a>";
@@ -194,6 +210,7 @@ namespace AutoRest.Go
 
         /// <summary>
         /// Return a Go map of required parameters.
+        // Refactor -> Generator
         /// </summary>
         /// <param name="parameters"></param>
         /// <param name="mapVariable"></param>
@@ -222,6 +239,7 @@ namespace AutoRest.Go
         /// <summary>
         /// Return string with formatted Go map.
         /// xyz["abc"] = 123
+        /// Refactor -> Generator
         /// </summary>
         /// <param name="parameter"></param>
         /// <param name="mapVariable"></param>
@@ -233,43 +251,46 @@ namespace AutoRest.Go
 
         /// <summary>
         /// Add imports for the parameter in parameter type.
+        /// Refactor -> Probably CodeModelTransformer, still, 0 references
         /// </summary>
         /// <param name="parameter"></param>
         /// <param name="imports"></param>
         public static void AddImports(this Parameter parameter, HashSet<string> imports)
         {
-            parameter.Type.AddImports(imports);
+            parameter.ModelType.AddImports(imports);
         }
 
         /// <summary>
         /// Get Name for parameter for Go map. 
         /// If parameter is client parameter, then return client.<parametername>
+        /// Refactor -> Generator
         /// </summary>
         /// <param name="parameter"></param>
         /// <returns></returns>
         public static string NameForMap(this Parameter parameter)
         {
-            return parameter.SerializedName.IsApiVersion()
+            return IsApiVersion(parameter.SerializedName.FixedValue)
                        ? ApiVersionSerializedName
-                        : parameter.SerializedName;
+                        : parameter.SerializedName.FixedValue;
         }
 
         /// <summary>
         /// Return formatted value string for the parameter.
+        /// Refactor -> Namer and generator
         /// </summary>
         /// <param name="parameter"></param>
         /// <returns></returns>
         public static string ValueForMap(this Parameter parameter)
         {
-            if (parameter.SerializedName.IsApiVersion())
+            if (IsApiVersion(parameter.SerializedName))
             {
                 return "client." + ApiVersionName;
             }
             var value = parameter.IsClientProperty()
-                ? "client." + GoCodeNamer.PascalCase(parameter.Name)
-                : parameter.Name;
+                ? "client." + GoCodeNamer.Instance.PascalCase(parameter.Name.FixedValue)
+                : parameter.Name.FixedValue;
 
-            var format = parameter.IsRequired || parameter.Type.CanBeEmpty()
+            var format = parameter.IsRequired || parameter.ModelType.CanBeEmpty()
                                           ? "{0}"
                                           : "*{0}";
 
@@ -286,6 +307,7 @@ namespace AutoRest.Go
 
         /// <summary>
         /// Return list of parameters for specified location passed in an argument.
+        /// Refactor -> Probably CodeModeltransformer, but even with 5 references, the other mkethods are not used anywhere
         /// </summary>
         /// <param name="parameters"></param>
         /// <param name="location"></param>
@@ -299,6 +321,7 @@ namespace AutoRest.Go
 
         /// <summary>
         /// Return list of retuired parameters for specified location passed in an argument.
+        /// Refactor -> CodeModelTransformer, still, 3 erefences, but no one uses the other methods.
         /// </summary>
         /// <param name="parameters"></param>
         /// <param name="location"></param>
@@ -312,6 +335,7 @@ namespace AutoRest.Go
 
         /// <summary>
         /// Return list of parameters as per their location in request.
+        /// Refactor -> CodeModelGenerator, 0 references
         /// </summary>
         /// <param name="parameters"></param>
         /// <returns></returns>
@@ -323,36 +347,43 @@ namespace AutoRest.Go
                     : null;
         }
 
+        /// Refactor -> CodeModelGenerator, 0 references
         public static IEnumerable<Parameter> BodyParameters(this IEnumerable<Parameter> parameters, bool isRequired)
         {
             return parameters.ByLocationAsRequired(ParameterLocation.Body, isRequired);
         }
 
+        /// Refactor -> CodeModelGenerator, 0 references
         public static IEnumerable<Parameter> FormDataParameters(this IEnumerable<Parameter> parameters)
         {
             return parameters.ByLocation(ParameterLocation.FormData);
         }
 
+        /// Refactor -> CodeModelGenerator, 0 references
         public static IEnumerable<Parameter> HeaderParameters(this IEnumerable<Parameter> parameters)
         {
             return parameters.ByLocation(ParameterLocation.Header);
         }
 
+        /// Refactor -> CodeModelGenerator, 0 references
         public static IEnumerable<Parameter> HeaderParameters(this IEnumerable<Parameter> parameters, bool isRequired)
         {
             return parameters.ByLocationAsRequired(ParameterLocation.Header, isRequired);
         }
 
+        /// Refactor -> CodeModelGenerator, 0 references
         public static IEnumerable<Parameter> PathParameters(this IEnumerable<Parameter> parameters)
         {
             return parameters.ByLocation(ParameterLocation.Path);
         }
 
+        /// Refactor -> CodeModelGenerator, 0 references
         public static IEnumerable<Parameter> QueryParameters(this IEnumerable<Parameter> parameters)
         {
             return parameters.ByLocation(ParameterLocation.Query);
         }
 
+        /// Refactor -> CodeModelGenerator, 0 references
         public static IEnumerable<Parameter> QueryParameters(this IEnumerable<Parameter> parameters, bool isRequired)
         {
             return parameters.ByLocationAsRequired(ParameterLocation.Query, isRequired);
@@ -360,6 +391,8 @@ namespace AutoRest.Go
 
         /// <summary>
         /// Return the separator associated with a given collectionFormat
+        /// It looks like other generators use this for split / join operations ?
+        /// Refactor -> I think CodeMoedelTransformer
         /// </summary>
         /// <param name="format">The collection format</param>
         /// <returns>The separator</returns>
@@ -380,16 +413,17 @@ namespace AutoRest.Go
             }
         }
 
+        // Refactor -> CodeModelTransformer
         public static bool IsClientProperty(this Parameter parameter)
         {
-            return parameter.ClientProperty != null || parameter.SerializedName.IsApiVersion();
+            return parameter.ClientProperty != null || IsApiVersion(parameter.SerializedName);
         }
 
-        public static string GetParameterName(this Parameter parameter)
+        public static string GetParameterName(this ParameterGo parameter)
         {
             return parameter.IsClientProperty()
-                            ? "client." + parameter.Name.Capitalize()
-                            : parameter.Name;
+                            ? "client." + Capitalize(parameter.Name.FixedValue)
+                            : parameter.Name.FixedValue;
         }
 
         public static bool IsMethodArgument(this Parameter parameter)
@@ -419,14 +453,14 @@ namespace AutoRest.Go
         //
         /////////////////////////////////////////////////////////////////////////////////////////
 
-        public static bool IsStreamType(this IType body)
+        public static bool IsStreamType(this IModelType body)
         {
             var r = body as SyntheticType;
             return r != null && (r.BaseType.IsPrimaryType(KnownPrimaryType.Stream));
         }
 
 
-        public static bool IsPrimaryType(this IType type, KnownPrimaryType typeToMatch)
+        public static bool IsPrimaryType(this IModelType type, KnownPrimaryType typeToMatch)
         {
             if (type == null)
             {
@@ -434,10 +468,10 @@ namespace AutoRest.Go
             }
 
             PrimaryType primaryType = type as PrimaryType;
-            return primaryType != null && primaryType.Type == typeToMatch;
+            return primaryType != null && primaryType.KnownPrimaryType == typeToMatch;
         }
 
-        public static bool CanBeEmpty(this IType type)
+        public static bool CanBeEmpty(this IModelType type)
         {
             var dictionaryType = type as DictionaryType;
             var interfaceType = type as InterfaceType;
@@ -448,14 +482,14 @@ namespace AutoRest.Go
             return dictionaryType != null
                 || interfaceType !=  null
                 || (    primaryType != null
-                 && (primaryType.Type == KnownPrimaryType.ByteArray
-                        || primaryType.Type == KnownPrimaryType.Stream
-                        || primaryType.Type == KnownPrimaryType.String))
+                 && (primaryType.KnownPrimaryType == KnownPrimaryType.ByteArray
+                        || primaryType.KnownPrimaryType == KnownPrimaryType.Stream
+                        || primaryType.KnownPrimaryType == KnownPrimaryType.String))
                 || sequenceType != null
                 || enumType != null;
         }
 
-        public static bool CanBeNull(this IType type)
+        public static bool CanBeNull(this IModelType type)
         {
             var dictionaryType = type as DictionaryType;
             var interfaceType = type as InterfaceType;
@@ -465,12 +499,12 @@ namespace AutoRest.Go
             return dictionaryType != null
                 || interfaceType != null
                 || (    primaryType != null
-                   && (primaryType.Type == KnownPrimaryType.ByteArray
-                      || primaryType.Type == KnownPrimaryType.Stream))
+                   && (primaryType.KnownPrimaryType == KnownPrimaryType.ByteArray
+                      || primaryType.KnownPrimaryType == KnownPrimaryType.Stream))
                 || sequenceType != null;
         }
         
-        public static string GetEmptyCheck(this IType type, string valueReference, bool asEmpty = true)
+        public static string GetEmptyCheck(this IModelType type, string valueReference, bool asEmpty = true)
         {
             if (type is PrimaryType)
             {
@@ -539,7 +573,7 @@ namespace AutoRest.Go
                                     : "{0} != nil && len({0}) > 0", valueReference);
         }
 
-        public static string GetNullCheck(this IType type, string valueReference, bool asNull = true)
+        public static string GetNullCheck(this IModelType type, string valueReference, bool asNull = true)
         {
             return string.Format(asNull
                                         ? "{0} == nil"
@@ -558,30 +592,35 @@ namespace AutoRest.Go
 
             // If the type is a paged model type, ensure the nextLink field exists
             // Note: Inject the field into a copy of the property list so as to not pollute the original list
-            if (    compositeType is ModelTemplateModel
-                &&  !String.IsNullOrEmpty((compositeType as ModelTemplateModel).NextLink))
+            if (    compositeType is ModelGo
+                &&  !String.IsNullOrEmpty((compositeType as ModelGo).NextLink))
             {
-                var nextLinkField = (compositeType as ModelTemplateModel).NextLink;
+                var nextLinkField = (compositeType as ModelGo).NextLink;
                 foreach (Property p in properties) {
                     p.Name = GoCodeNamer.PascalCaseWithoutChar(p.Name, '.');
-                    if (p.Name.Equals(nextLinkField, StringComparison.OrdinalIgnoreCase)) {
+                    if (p.Name.EqualsIgnoreCase(nextLinkField)) {
                         p.Name = nextLinkField;
                     }
                 }
-                if (!properties.Any(p => p.Name.Equals(nextLinkField, StringComparison.OrdinalIgnoreCase)))
+                if (!properties.Any(p => p.Name.EqualsIgnoreCase(nextLinkField)))
                 {
-                    var property = new Property();
+                    // var property = new Property();
+                    // property.Name = nextLinkField;
+                    // property.ModelType = new PrimaryType(KnownPrimaryType.String) { Name = "string" };
+                    // properties = new List<Property>(properties);
+                    // properties.Add(property);
+                    var property = New<Property>();
                     property.Name = nextLinkField;
-                    property.Type = new PrimaryType(KnownPrimaryType.String) { Name = "string" };
-                    properties = new List<Property>(properties);
-                    properties.Add(property);
+                    property.ModelType = New<PrimaryType>(KnownPrimaryType.String);
+                    // property.ModelType.Name = "string";
+                    properties.ToList().Add(property);
                 }
             }
 
             // Emit each property, except for named Enumerated types, as a pointer to the type
             foreach (var property in properties)
             {
-                EnumType enumType = property.Type as EnumType;
+                EnumType enumType = property.ModelType as EnumType;
                 if (enumType != null && enumType.IsNamed())
                 {
                     indented.AppendFormat("{0} {1} {2}\n",
@@ -590,13 +629,13 @@ namespace AutoRest.Go
                                     property.JsonTag());
 
                 }
-                else if (property.Type is DictionaryType)
+                else if (property.ModelType is DictionaryType)
                 {
-                    indented.AppendFormat("{0} *{1} {2}\n", property.Name, (property.Type as MapType).FieldName, property.JsonTag());
+                    indented.AppendFormat("{0} *{1} {2}\n", property.Name, (property.ModelType as MapType).FieldName, property.JsonTag());
                 }
                 else
                 {
-                    indented.AppendFormat("{0} *{1} {2}\n", property.Name, property.Type.Name, property.JsonTag());
+                    indented.AppendFormat("{0} *{1} {2}\n", property.Name, property.ModelType.Name, property.JsonTag());
                 }
             }
             
@@ -620,7 +659,7 @@ namespace AutoRest.Go
         /// </summary>
         /// <param name="type"></param>
         /// <param name="imports"></param>
-        public static void AddImports(this IType type, HashSet<string> imports)
+        public static void AddImports(this IModelType type, HashSet<string> imports)
         {
             if (type is DictionaryType)
             {
@@ -649,7 +688,7 @@ namespace AutoRest.Go
         {
             compositeType
                 .Properties
-                .ForEach(p => p.Type.AddImports(imports));
+                .ForEach(p => p.ModelType.AddImports(imports));
         }
 
         /// <summary>
@@ -679,7 +718,7 @@ namespace AutoRest.Go
         /// <param name="imports"></param>
         public static void AddImports(this PrimaryType primaryType, HashSet<string> imports)
         {
-            if (primaryType.Type == KnownPrimaryType.Stream)
+            if (primaryType.KnownPrimaryType == KnownPrimaryType.Stream)
             {
                 imports.Add("io");
             }
@@ -713,18 +752,18 @@ namespace AutoRest.Go
 
             foreach (var p in parameters)
             {
-                var name = p.SerializedName.IsApiVersion()
+                var name = IsApiVersion(p.SerializedName)
                     ? "client." + ApiVersionName
                     : !p.IsClientProperty()
-                        ? p.Name
-                        : "client." + p.Name.Capitalize();
+                        ? p.Name.FixedValue
+                        : "client." + Capitalize(p.Name.FixedValue);
 
                 List<string> x = new List<string>();
-                if (p.Type is CompositeType)
+                if (p.ModelType is CompositeType)
                 {
-                    ancestors.Add(p.Type.Name);
+                    ancestors.Add(p.ModelType.Name);
                     x.AddRange(p.ValidateCompositeType(name, method, ancestors));
-                    ancestors.Remove(p.Type.Name);
+                    ancestors.Remove(p.ModelType.Name);
                 }
                 else
                     x.AddRange(p.ValidateType(name, method));
@@ -743,7 +782,7 @@ namespace AutoRest.Go
         /// <param name="method"></param>
         /// <param name="isCompositeProperties"></param>
         /// <returns></returns>
-        public static List<string> ValidateType(this IParameter p, string name, HttpMethod method,
+        public static List<string> ValidateType(this IVariable p, string name, HttpMethod method,
             bool isCompositeProperties = false)
         {
             List<string> x = new List<string>();
@@ -777,18 +816,18 @@ namespace AutoRest.Go
         /// <param name="ancestors"></param>
         /// <param name="isCompositeProperties"></param>
         /// <returns></returns>
-        public static List<string> ValidateCompositeType(this IParameter p, string name, HttpMethod method, HashSet<string> ancestors,
+        public static List<string> ValidateCompositeType(this IVariable p, string name, HttpMethod method, HashSet<string> ancestors,
             bool isCompositeProperties = false)
         {
             List<string> x = new List<string>();
             if (method != HttpMethod.Patch || !p.IsBodyParameter() || isCompositeProperties)
             {
-                foreach (var prop in ((CompositeType)p.Type).Properties)
+                foreach (var prop in ((CompositeType)p.ModelType).Properties)
                 {
-                    var primary = prop.Type as PrimaryType;
-                    var sequence = prop.Type as SequenceType;
-                    var map = prop.Type as MapType;
-                    var composite = prop.Type as CompositeType;
+                    var primary = prop.ModelType as PrimaryType;
+                    var sequence = prop.ModelType as SequenceType;
+                    var map = prop.ModelType as MapType;
+                    var composite = prop.ModelType as CompositeType;
 
                     if (primary != null || sequence != null || map != null)
                         x.AddRange(prop.ValidateType($"{name}.{prop.Name}", method, true));
@@ -808,7 +847,7 @@ namespace AutoRest.Go
                 }
             }
 
-            x.AddRange(from prop in ((CompositeType)p.Type).Properties
+            x.AddRange(from prop in ((CompositeType)p.ModelType).Properties
                        where prop.IsReadOnly
                        select GetConstraint($"{name}.{prop.Name}", ReadOnlyConstraint, "true"));
 
@@ -864,9 +903,9 @@ namespace AutoRest.Go
         /// <param name="p"></param>
         /// <returns></returns>
         // Check if type is not a null or pointer type.
-        public static bool CheckNull(this IParameter p)
+        public static bool CheckNull(this IVariable p)
         { 
-            return p is Parameter && (p.Type.IsNullValueType() || !(p.IsRequired || p.Type.CanBeEmpty()));
+            return p is Parameter && (p.ModelType.IsNullValueType() || !(p.IsRequired || p.ModelType.CanBeEmpty()));
         }
 
         /// <summary>
@@ -874,7 +913,7 @@ namespace AutoRest.Go
         /// </summary>
         /// <param name="t"></param>
         /// <returns></returns>
-        public static bool IsEmptyValueType(this IType t)
+        public static bool IsEmptyValueType(this IModelType t)
         {
             var dictionaryType = t as DictionaryType;
             var interfaceType = t as InterfaceType;
@@ -885,8 +924,8 @@ namespace AutoRest.Go
             return dictionaryType != null
                 || interfaceType != null
                 || (primaryType != null
-                 && (primaryType.Type == KnownPrimaryType.ByteArray
-                        || primaryType.Type == KnownPrimaryType.String))
+                 && (primaryType.KnownPrimaryType == KnownPrimaryType.ByteArray
+                        || primaryType.KnownPrimaryType == KnownPrimaryType.String))
                 || sequenceType != null
                 || enumType != null;
         }
@@ -896,7 +935,7 @@ namespace AutoRest.Go
         /// </summary>
         /// <param name="t"></param>
         /// <returns></returns>
-        public static bool IsNullValueType(this IType t)
+        public static bool IsNullValueType(this IModelType t)
         {
             var dictionaryType = t as DictionaryType;
             var interfaceType = t as InterfaceType;
@@ -906,7 +945,7 @@ namespace AutoRest.Go
             return dictionaryType != null
                 || interfaceType != null
                 || (primaryType != null
-                   && primaryType.Type == KnownPrimaryType.ByteArray)
+                   && primaryType.KnownPrimaryType == KnownPrimaryType.ByteArray)
                 || sequenceType != null;
         }
 
@@ -915,7 +954,7 @@ namespace AutoRest.Go
         /// </summary>
         /// <param name="p"></param>
         /// <returns></returns>
-        public static bool IsBodyParameter(this IParameter p)
+        public static bool IsBodyParameter(this IVariable p)
         {
             return p is Parameter && ((Parameter)p).Location == ParameterLocation.Body;
         }
@@ -997,13 +1036,13 @@ namespace AutoRest.Go
         /// <param name="method"></param>
         /// <param name="methods"></param>
         /// <returns></returns>
-        public static bool NextMethodExists(this Method method, List<Method> methods) {
+        public static bool NextMethodExists(this Method method, IEnumerableWithIndex<Method> methods) {
             if (method.Extensions.ContainsKey(AzureExtensions.PageableExtension))
             {
                 var pageableExtension = JsonConvert.DeserializeObject<PageableExtension>(method.Extensions[AzureExtensions.PageableExtension].ToString());
                 if (pageableExtension != null && !string.IsNullOrWhiteSpace(pageableExtension.OperationName))
                 {
-                    return methods.Any(m => m.SerializedName.Equals(pageableExtension.OperationName, StringComparison.OrdinalIgnoreCase));
+                    return methods.Any(m => m.SerializedName.EqualsIgnoreCase(pageableExtension.OperationName));
                 }
             }
             return false;
@@ -1065,10 +1104,10 @@ namespace AutoRest.Go
        /// <param name="attributeName"></param>
        /// <param name="packageName"></param>
        /// <returns></returns>
-        public static string UpdateNameIfDuplicate(this CodeModelTransformer model, string attributeName, string packageName)
+        public static string UpdateNameIfDuplicate(this CodeModel cm, string attributeName, string packageName)
         { 
             bool isDuplicateEnumName = false;
-            foreach (var e in model.EnumTypes)
+            foreach (var e in cm.EnumTypes)
             {
                 if (e.Values.Any(v => v.Name == attributeName))
                 {
@@ -1078,7 +1117,7 @@ namespace AutoRest.Go
                     break;
             }
 
-            return model.ModelTypes.Any(p => p.Name == attributeName) || isDuplicateEnumName
+            return cm.ModelTypes.Any(p => p.Name == attributeName) || isDuplicateEnumName
                 ? $"{attributeName}{packageName.Capitalize()}"
                 : attributeName;
         }

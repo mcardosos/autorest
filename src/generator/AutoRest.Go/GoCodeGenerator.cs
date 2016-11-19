@@ -1,11 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
+using System;
 using System.Threading.Tasks;
 
 using AutoRest.Core;
-using AutoRest.Core.ClientModel;
-using AutoRest.Go.TemplateModels;
+using AutoRest.Core.Model;
+using AutoRest.Go.Model;
 using AutoRest.Go.Templates;
 using AutoRest.Extensions.Azure;
 
@@ -15,17 +16,17 @@ namespace AutoRest.Go
     {
         private readonly GoCodeNamer _namingFramework;
 
-        public GoCodeGenerator(Settings settings) : base(settings)
+        public GoCodeGenerator()
         {
-            _namingFramework = new GoCodeNamer();
+
         }
 
-        public override string Name
+        public string Name
         {
             get { return "Go"; }
         }
 
-        public override string Description
+        public string Description
         {
             get { return "Go Client Libraries"; }
         }
@@ -43,15 +44,13 @@ namespace AutoRest.Go
         /// <summary>
         /// Normalizes client model by updating names and types to be language specific.
         /// </summary>
-        /// <param name="serviceClientModel"></param>
-        public override void NormalizeClientModel(ServiceClient serviceClientModel)
+        /// <param name="cm"></param>
+        public void NormalizeCodeModel(CodeModel cm)
         {
             // Add the current package name as a reserved keyword
-            _namingFramework.ReserveNamespace(Settings.Namespace);
-            _namingFramework.NormalizeClientModel(serviceClientModel);            
-            AzureExtensions.ProcessGlobalParameters(serviceClientModel);
-            _namingFramework.ResolveNameCollisions(serviceClientModel, Settings.Namespace,
-                Settings.Namespace + ".Models");
+            _namingFramework.ReserveNamespace(cm.Namespace);
+            _namingFramework.NormalizeCodeModel(cm);
+            AzureExtensions.ProcessGlobalParameters(cm);
         }
 
         /// <summary>
@@ -59,43 +58,41 @@ namespace AutoRest.Go
         /// </summary>
         /// <param name="serviceClient"></param>
         /// <returns></returns>
-        public override async Task Generate(ServiceClient serviceClient)
+        public override async Task Generate(CodeModel cm)
         {
-            string packageName = GoCodeNamer.PackageNameFromNamespace(Settings.Namespace);
+            
+            var codeModel = cm as CodeModelGo;
+            if (codeModel == null)
+            {                
+                throw new Exception("Code model is not a Go Code Model");
+            }
 
-            // If version is passed in command line then pick that, else keep it 0.0.0(to make it optional for testing).
-            string[] version = GoCodeNamer.SDKVersionFromPackageVersion(
-                                            !string.IsNullOrEmpty(Settings.PackageVersion)
-                                                    ? Settings.PackageVersion
-                                                    : "0.0.0");
             // Service client
-            var serviceClientTemplate = new ServiceClientTemplate
+             var serviceClientTemplate = new ServiceClientTemplate
             {
-                Model = new ServiceClientTemplateModel(serviceClient, packageName),
+                Model = codeModel
             };
+            
             await Write(serviceClientTemplate, GoCodeNamer.FormatFileName("client"));
 
-            foreach (var methodGroupName in serviceClient.MethodGroups)
+            foreach (var methodGroupModel in codeModel.MethodGroupModels)
             {
-                var groupedMethodTemplate = new MethodGroupTemplate
+                var methodGroupTemplate = new MethodGroupTemplate
                 {
-                    Model = new MethodGroupTemplateModel(serviceClient, packageName, methodGroupName),
+                    Model = methodGroupModel
                 };
-                await Write(groupedMethodTemplate, GoCodeNamer.FormatFileName(methodGroupName.ToLowerInvariant()));
+                await Write(methodGroupTemplate, GoCodeNamer.FormatFileName((string) methodGroupModel.TypeName).ToLowerInvariant());
             }
 
             // Models
             var modelsTemplate = new ModelsTemplate
             {
-                Model = new ModelsTemplateModel(serviceClient, packageName),
+                Model = codeModel
             };
             await Write(modelsTemplate, GoCodeNamer.FormatFileName("models"));
 
             // Version
-            var versionTemplate = new VersionTemplate
-            {
-                Model = new VersionTemplateModel(serviceClient, packageName, version),
-            };
+            var versionTemplate = new VersionTemplate { Model = codeModel };
             await Write(versionTemplate, GoCodeNamer.FormatFileName("version"));
         }
     }

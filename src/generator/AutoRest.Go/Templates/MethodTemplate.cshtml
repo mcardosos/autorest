@@ -2,9 +2,9 @@
 @using System.Linq;
 @using System.Text;
 
-@using AutoRest.Core.ClientModel
+@using AutoRest.Core.Model
 @using AutoRest.Go
-@inherits AutoRest.Go.Template<AutoRest.Go.TemplateModels.MethodTemplateModel>
+@inherits AutoRest.Core.Template<AutoRest.Go.Model.MethodGo>
 
 @{
     StringBuilder sb = new StringBuilder();
@@ -14,10 +14,10 @@
         {
             sb.Append(parameter.Name);
             sb.Append(" is ");
-            sb.Append(parameter.Documentation.ToSentence());
+            sb.Append(parameter.Documentation.FixedValue.ToSentence());
             sb.Append(" ");
         }
-        if (parameter.Type.IsPrimaryType(KnownPrimaryType.Stream))
+        if (parameter.ModelType.IsPrimaryType(KnownPrimaryType.Stream))
         {
             sb.Append(parameter.Name);
             sb.Append(" will be closed upon successful return. Callers should ensure closure when receiving an error.");
@@ -80,7 +80,7 @@ func (client @(Model.Owner)) @(Model.PreparerMethodName)(@(Model.MethodParameter
     @:@(Model.QueryMap)
     foreach (Parameter p in Model.OptionalQueryParameters)
     {
-    @:if @(p.Type.GetEmptyCheck(p.GetParameterName(),false)) {
+    @:if @(p.ModelType.GetEmptyCheck(p.Name,false)) {
         @:@(p.AddToMap("queryParameters"))
     @:}
     }
@@ -99,7 +99,7 @@ func (client @(Model.Owner)) @(Model.PreparerMethodName)(@(Model.MethodParameter
 
 @if (Model.BodyParameter != null && !Model.BodyParameter.IsRequired)
 {
-    @:if @(Model.BodyParameter.Type.GetEmptyCheck(Model.BodyParameter.Name, false)) {
+    @:if @(Model.BodyParameter.ModelType.GetEmptyCheck(Model.BodyParameter.Name, false)) {
         @:preparer = autorest.DecoratePreparer(preparer,
                             @:@(string.Format("autorest.WithJSON({0})", Model.BodyParameter.Name)))
     @:}
@@ -107,7 +107,7 @@ func (client @(Model.Owner)) @(Model.PreparerMethodName)(@(Model.MethodParameter
 
 @foreach (Parameter p in Model.OptionalHeaderParameters)
     {
-    @:if @(p.Type.GetEmptyCheck(p.GetParameterName(),false)) {
+    @:if @(p.ModelType.GetEmptyCheck(p.Name,false)) {
         @:preparer = autorest.DecoratePreparer(preparer,
                             @:@(string.Format("autorest.WithHeader(\"{0}\",autorest.String({1}))",
                             p.SerializedName, p.Name)))

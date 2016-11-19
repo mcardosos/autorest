@@ -4,17 +4,18 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using AutoRest.Core.Model;
+using AutoRest.Core.Utilities;
 
-using AutoRest.Core.ClientModel;
 
 namespace AutoRest.Go
 {
     /// <summary>
     /// Defines a pseudo-PrimaryType to support Go interface types.
     /// </summary>
-    public class InterfaceType : IType
+    public class InterfaceType : IModelType
     {
-        public string Name
+        public Fixable<string> Name
         {
             get { return "interface{}"; }
         }
@@ -39,6 +40,24 @@ namespace AutoRest.Go
         public override int GetHashCode()
         {
             return Name.GetHashCode();
+        }
+
+        public string ExtendedDocumentation { get; }
+        public string DefaultValue { get; }
+        public bool IsConstant { get; }
+        public string ClassName { get; }
+        public CodeModel CodeModel { get; }
+        public IEnumerable<IIdentifier> IdentifiersInScope { get; }
+        public IParent Parent { get; }
+        public IEnumerable<IChild> Children { get; }
+        public string Qualifier { get; }
+        public IEnumerable<string> MyReservedNames { get; }
+        public HashSet<string> LocallyUsedNames { get; }
+        public string QualifierType { get; }
+        public string DeclarationName { get; }
+        public void Disambiguate()
+        {
+
         }
     }
 }
