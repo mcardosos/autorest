@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 
@@ -12,7 +13,23 @@ namespace AutoRest.Core.Utilities
     {
         public void WriteFile(string path, string contents)
         {
-            File.WriteAllText(path, contents, Encoding.UTF8);
+            var eol = path.LineEnding();
+            var lines = contents.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            if (File.Exists(path))
+            {
+                var mvname = $"{path}_{new Random().Next(999999)}";
+                File.Move(path,mvname);
+                File.Delete(mvname);
+            }
+            // write out the file, with correct line endings for file.
+            using (var writer = GetTextWriter(path))
+            {
+                foreach (var line in lines)
+                {
+                    writer.Write(line);
+                    writer.Write(eol);
+                }
+            }
         }
 
         /// <summary>
@@ -20,7 +37,7 @@ namespace AutoRest.Core.Utilities
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        public static bool IsCompletePath(string path)
+        public bool IsCompletePath(string path)
             => Path.IsPathRooted(path) || Uri.IsWellFormedUriString(path, UriKind.Absolute);
 
         /// <summary>
@@ -31,9 +48,9 @@ namespace AutoRest.Core.Utilities
         /// <param name="rootPath"></param>
         /// <param name="relativePath"></param>
         /// <returns></returns>
-        public static string MakePathRooted(Uri rootPath, string relativePath)
+        public string MakePathRooted(Uri rootPath, string relativePath)
         {
-            var combined = new Uri(rootPath, relativePath);
+            var combined = new Uri(Path.Combine(rootPath.ToString(), relativePath));
             return combined.IsAbsoluteUri ? combined.AbsoluteUri : combined.LocalPath;
         }
 
@@ -53,13 +70,8 @@ namespace AutoRest.Core.Utilities
             {
                 return File.AppendText(path);
             }
-            return File.CreateText(path);
-#if FORCE_UTF8_BOM
-            // existing ARS files have utf8withbom. 
-            // only necessary for some weird manual testing :D
-            var utf8WithBom = new System.Text.UTF8Encoding(true);
-            return new StreamWriter(path, false, utf8WithBom);
-#endif            
+            // ensure that we're being very very explicit: NO BYTE ORDER MARK. 
+            return new StreamWriter(path, false, new UTF8Encoding(false, true));
         }
 
         public bool FileExists(string path)
@@ -106,6 +118,13 @@ namespace AutoRest.Core.Utilities
         public string[] GetDirectories(string startDirectory, string filePattern, SearchOption options)
         {
             return Directory.GetDirectories(startDirectory, filePattern, options);
+        }
+
+        public string CurrentDirectory => Directory.GetCurrentDirectory();
+
+        public string GetParentDir(string path)
+        {
+            return Directory.GetParent(Path.Combine(Directory.GetCurrentDirectory(), path)).FullName;
         }
     }
 }

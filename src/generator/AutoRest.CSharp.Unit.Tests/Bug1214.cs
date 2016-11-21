@@ -18,7 +18,7 @@ namespace AutoRest.CSharp.Unit.Tests
         }
 
         /// <summary>
-        ///     https://github.com/Azure/autorest/issues/1125
+        ///     https://github.com/Azure/autorest/issues/1214
         ///     Support format:'char' for single character strings.
         /// </summary>
         [Fact]
@@ -38,7 +38,7 @@ namespace AutoRest.CSharp.Unit.Tests
                             && !SuppressWarnings.Contains(each.Id)).ToArray();
 
                 // use this to dump the files to disk for examination
-                // fileSystem.SaveFilesToTemp("bug1125");
+                // fileSystem.SaveFilesToTemp("bug1214");
 
                 // Or just use this to see the generated code in VsCode :D
                 // ShowGeneratedCode(fileSystem);

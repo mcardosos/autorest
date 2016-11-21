@@ -20,8 +20,8 @@ class Usage(Model):
      'BytesPerSecond'
     :type unit: str or :class:`UsageUnit
      <fixtures.acceptancetestsstoragemanagementclient.models.UsageUnit>`
-    :param current_value: Gets the current count of the allocated resources
-     in the subscription.
+    :param current_value: Gets the current count of the allocated resources in
+     the subscription.
     :type current_value: int
     :param limit: Gets the maximum count of the resources that can be
      allocated in the subscription.
@@ -29,7 +29,7 @@ class Usage(Model):
     :param name: Gets the name of the type of usage.
     :type name: :class:`UsageName
      <fixtures.acceptancetestsstoragemanagementclient.models.UsageName>`
-    """ 
+    """
 
     _attribute_map = {
         'unit': {'key': 'unit', 'type': 'UsageUnit'},

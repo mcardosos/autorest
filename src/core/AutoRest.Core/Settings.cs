@@ -93,7 +93,7 @@ Licensed under the MIT License. See License.txt in the project root for license 
                     }
                     else
                     {
-                        _inputFolder = new Uri(Path.Combine(Directory.GetParent(Input).FullName, "."));
+                        _inputFolder = new Uri(this.FileSystem.GetParentDir(Input), UriKind.Relative);
                     }
                 }
                 return _inputFolder;
@@ -173,6 +173,9 @@ Licensed under the MIT License. See License.txt in the project root for license 
                       "the value of the 'Title' field from the Swagger input.")]
         [SettingsAlias("name")]
         public string ClientName { get; set; }
+
+        [SettingsInfo("Disables post-codegeneration simplifier")]
+        public bool DisableSimplifier { get; set; }
 
         /// <summary>
         /// Gets or sets the maximum number of properties in the request body.

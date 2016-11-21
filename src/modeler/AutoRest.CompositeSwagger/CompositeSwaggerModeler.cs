@@ -54,24 +54,23 @@ namespace AutoRest.CompositeSwagger
             for (var i = 0; i < compositeSwaggerModel.Documents.Count; i++)
             {
                 var compositeDocument = compositeSwaggerModel.Documents[i];
-                if (!FileSystem.IsCompletePath(compositeDocument))
+                if (!Settings.FileSystem.IsCompletePath(compositeDocument) || !Settings.FileSystem.FileExists(compositeDocument))
                 {
                     // Otherwise, root it from the current path
-                    compositeSwaggerModel.Documents[i] = FileSystem.MakePathRooted(Settings.InputFolder, compositeDocument);
+                    compositeSwaggerModel.Documents[i] = Settings.FileSystem.MakePathRooted(Settings.InputFolder, compositeDocument);
                 }
             }
 
             CodeModel compositeClient = InitializeServiceClient(compositeSwaggerModel);
             using (NewContext)
             {
-               
-            foreach (var childSwaggerPath in compositeSwaggerModel.Documents)
-            {
-                Settings.Input = childSwaggerPath;
+                foreach (var childSwaggerPath in compositeSwaggerModel.Documents)
+                {
+                    Settings.Input = childSwaggerPath;
                     var swaggerModeler = new SwaggerModeler();
-                var serviceClient = swaggerModeler.Build();
-                compositeClient = Merge(compositeClient, serviceClient);
-            }
+                    var serviceClient = swaggerModeler.Build();
+                    compositeClient = Merge(compositeClient, serviceClient);
+                }
             }
             return compositeClient;
         }
@@ -259,6 +258,12 @@ namespace AutoRest.CompositeSwagger
                 foreach (var parameter in method.Parameters)
                 {
                     EnsureUsesTypeFromModel(parameter, compositeClient);
+                }
+
+                foreach (var response in method.Responses.Values)
+                {
+                    response.Body = EnsureUsesTypeFromModel(response.Body, compositeClient);
+                    response.Headers = EnsureUsesTypeFromModel(response.Headers, compositeClient);
                 }
 
                 method.ReturnType.Body = EnsureUsesTypeFromModel(method.ReturnType.Body, compositeClient);

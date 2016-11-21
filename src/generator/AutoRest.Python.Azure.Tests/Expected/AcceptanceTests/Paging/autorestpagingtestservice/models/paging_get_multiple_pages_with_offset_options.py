@@ -21,11 +21,10 @@ class PagingGetMultiplePagesWithOffsetOptions(Model):
     :type maxresults: int
     :param offset: Offset of return value
     :type offset: int
-    :param timeout: Sets the maximum time that the server can spend
-     processing the request, in seconds. The default is 30 seconds. Default
-     value: 30 .
+    :param timeout: Sets the maximum time that the server can spend processing
+     the request, in seconds. The default is 30 seconds. Default value: 30 .
     :type timeout: int
-    """ 
+    """
 
     _validation = {
         'offset': {'required': True},

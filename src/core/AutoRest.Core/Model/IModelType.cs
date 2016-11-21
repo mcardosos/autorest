@@ -44,6 +44,13 @@ namespace AutoRest.Core.Model
         string DeclarationName { get; }
 
         string ClassName { get; }
+
+        /// <summary>
+        /// Determines whether the specified model type is structurally equal to this object.
+        /// </summary>
+        /// <param name="other">The object to compare with this object.</param>
+        /// <returns>true if the specified object is functionally equal to this object; otherwise, false.</returns>
+        bool StructurallyEquals(IModelType other);
     }
 
     /// <summary>
@@ -127,6 +134,26 @@ namespace AutoRest.Core.Model
                 Name = name;
             }
         }
+
+        /// <summary>
+        /// Determines whether the specified model type is structurally equal to this object.
+        /// </summary>
+        /// <param name="other">The object to compare with this object.</param>
+        /// <returns>true if the specified object is functionally equal to this object; otherwise, false.</returns>
+        public virtual bool StructurallyEquals(IModelType other)
+        {
+            if (ReferenceEquals(other, null))
+            {
+                return false;
+            }
+
+            return GetType() == other.GetType() && Name.Equals(other.Name);
+        }
+
+        /// <summary>
+        /// Gets a dictionary of x-vendor extensions defined for the CompositeType.
+        /// </summary>
+        public Dictionary<string, object> Extensions { get; } = new Dictionary<string, object>();
 
         [JsonProperty("$type", Order = -100)]
         public abstract string RefName { get; }

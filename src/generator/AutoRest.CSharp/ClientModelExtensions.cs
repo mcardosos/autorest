@@ -154,7 +154,7 @@ namespace AutoRest.CSharp
             }
 
             string documentation = String.Empty;
-            string summary = string.IsNullOrEmpty(property.Summary) ? property.Documentation : property.Summary;
+            string summary = string.IsNullOrEmpty(property.Summary) ? property.Documentation.EscapeXmlComment() : property.Summary.EscapeXmlComment();
 
             if (summary.TrimStart().StartsWith("Gets ", StringComparison.OrdinalIgnoreCase))
             {
@@ -487,6 +487,6 @@ namespace AutoRest.CSharp
         /// </summary>
         /// <param name="variable">The property or parameter to check </param>
         /// <returns>True when the property or parameter can be assigned to null.</returns>
-        public static bool IsNullable(this IVariable variable) => variable.IsXNullable || !variable.IsRequired || !variable.ModelType.IsValueType();
+        public static bool IsNullable(this IVariable variable) => !variable.ModelType.IsValueType() || (variable.IsXNullable ?? !variable.IsRequired);
     }
 }

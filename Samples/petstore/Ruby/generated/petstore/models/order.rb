@@ -5,6 +5,7 @@ module Petstore
     #
     # Model object.
     #
+    #
     class Order
       # @return [Integer]
       attr_accessor :id

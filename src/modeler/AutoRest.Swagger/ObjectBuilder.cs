@@ -80,7 +80,7 @@ namespace AutoRest.Swagger
                             e => e.Name.RawValue.EqualsIgnoreCase(enumType.Name.RawValue));
                     if (existingEnum != null)
                     {
-                        if (!existingEnum.Equals(enumType))
+                        if (!existingEnum.StructurallyEquals(enumType))
                         {
                             throw new InvalidOperationException(
                                 string.Format(CultureInfo.InvariantCulture,
@@ -120,7 +120,8 @@ namespace AutoRest.Swagger
                     SwaggerObject.Items.GetBuilder(Modeler).BuildServiceType(itemServiceTypeName);
                 return New<SequenceType>(new 
                 {
-                    ElementType = elementType
+                    ElementType = elementType,
+                    Extensions = SwaggerObject.Items.Extensions
                 });
             }
             if (SwaggerObject.AdditionalProperties != null)
@@ -134,11 +135,12 @@ namespace AutoRest.Swagger
                 {
                     dictionaryValueServiceTypeName = serviceTypeName + "Value";
                 }
-                return New <DictionaryType>(new 
+                return New<DictionaryType>(new 
                 {
                     ValueType =
                         SwaggerObject.AdditionalProperties.GetBuilder(Modeler)
-                            .BuildServiceType((dictionaryValueServiceTypeName))
+                            .BuildServiceType((dictionaryValueServiceTypeName)),
+                    Extensions = SwaggerObject.AdditionalProperties.Extensions
                 });
             }
 

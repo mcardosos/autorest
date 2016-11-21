@@ -53,7 +53,7 @@ namespace AutoRest.Core
         public virtual /* async */ Task Generate(CodeModel codeModel)
         {
             ResetFileList();
-            
+
             // since we're not actually async, return a completed task.
             return "".AsResultTask();
         }
@@ -76,7 +76,7 @@ namespace AutoRest.Core
             {
                 await template.ExecuteAsync().ConfigureAwait(false);
             }
-            await Write(stringBuilder.ToString(), fileName);
+            await Write(stringBuilder.ToString(), fileName, true);
         }
 
         /// <summary>
@@ -84,20 +84,21 @@ namespace AutoRest.Core
         /// </summary>
         /// <param name="template"></param>
         /// <param name="fileName"></param>
+        /// <param name="skipEmptyLines"></param>
         /// <returns></returns>
-        public async Task Write(string template, string fileName)
+        public async Task Write(string template, string fileName, bool skipEmptyLines)
         {
             string filePath = null;
 
             if (Settings.Instance.OutputFileName != null)
             {
-                if(!IsSingleFileGenerationSupported)
+                if (!IsSingleFileGenerationSupported)
                 {
                     Logger.LogError(new ArgumentException(Settings.Instance.OutputFileName),
                         Resources.LanguageDoesNotSupportSingleFileGeneration, Settings.Instance.CodeGenerator);
                     ErrorManager.ThrowErrors();
                 }
-                
+
                 filePath = Path.Combine(Settings.Instance.OutputDirectory, Settings.Instance.OutputFileName);
 
                 if (firstTimeWriteSingleFile)
@@ -116,10 +117,12 @@ namespace AutoRest.Core
                     throw new Exception($"Duplicate File Generation: {filePath}");
                 }
                 FileList.Add(filePath);
-                    Settings.Instance.FileSystem.DeleteFile(filePath);
+                Settings.Instance.FileSystem.DeleteFile(filePath);
             }
             // Make sure the directory exist
             Settings.Instance.FileSystem.CreateDirectory(Path.GetDirectoryName(filePath));
+
+            var lineEnding = filePath.LineEnding();
 
             using (StringReader streamReader = new StringReader(template))
             using (TextWriter textWriter = Settings.Instance.FileSystem.GetTextWriter(filePath))
@@ -127,13 +130,17 @@ namespace AutoRest.Core
                 string line;
                 while ((line = streamReader.ReadLine()) != null)
                 {
+                    // remove any errant line endings, and trim whitespace from the end too.
+                    line = line.Replace("\r", "").Replace("\n", "").TrimEnd(' ','\r','\n','\t');
+
                     if (line.Contains(TemplateConstants.EmptyLine))
                     {
-                        await textWriter.WriteLineAsync();
+                        await textWriter.WriteAsync(lineEnding);
                     }
-                    else if (!string.IsNullOrWhiteSpace(line))
+                    else if (!skipEmptyLines || !string.IsNullOrWhiteSpace(line))
                     {
-                        await textWriter.WriteLineAsync(line);
+                        await textWriter.WriteAsync(line);
+                        await textWriter.WriteAsync(lineEnding);
                     }
                 }
             }
