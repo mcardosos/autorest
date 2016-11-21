@@ -12,7 +12,7 @@ using AutoRest.Core.Utilities;
 using AutoRest.Core.Logging;
 using AutoRest.Core.Model;
 using AutoRest.Go.Properties;
-using AutoRest.Go;
+using AutoRest.Go.Model;
 
 namespace AutoRest.Go
 {
@@ -247,7 +247,7 @@ namespace AutoRest.Go
             // Looks like... deprecated by refactor :p
             // base.NormalizeClientModel(cm);
 
-            List<SyntheticType> syntheticTypes = new List<SyntheticType>();
+            List<CompositeTypeGo> compositeTypes = new List<CompositeTypeGo>();
 
             // Trim the package name from exported types; append a suitable qualifier, if needed, to avoid conflicts.
             var exportedTypes = new HashSet<object>();
@@ -301,18 +301,18 @@ namespace AutoRest.Go
                 }
 
                 //Refactor -> CodeModelTransformer
-                if (SyntheticType.ShouldBeSyntheticType(method.ReturnType.Body))
+                if (CompositeTypeGo.ShouldBeSyntheticType(method.ReturnType.Body))
                 {
-                    SyntheticType st = new SyntheticType(method.ReturnType.Body);
-                    if (syntheticTypes.Contains(st))
+                    CompositeTypeGo ctg = new CompositeTypeGo(method.ReturnType.Body);
+                    if (compositeTypes.Contains(ctg))
                     {
-                        method.ReturnType = new Response(syntheticTypes.Find(i => i.Equals(st)), method.ReturnType.Headers);
+                        method.ReturnType = new Response(compositeTypes.Find(i => i.Equals(ctg)), method.ReturnType.Headers);
                     }
                     else
                     {
-                        syntheticTypes.ToList().Add(st);
-                        cm.ModelTypes.ToList().Add(st);
-                        method.ReturnType = new Response(st, method.ReturnType.Headers);
+                        compositeTypes.Add(ctg);
+                        cm.ModelTypes.ToList().Add(ctg);
+                        method.ReturnType = new Response(ctg, method.ReturnType.Headers);
                     }
                 }
             }
@@ -459,7 +459,7 @@ namespace AutoRest.Go
         {
             if (primaryType.KnownPrimaryType == KnownPrimaryType.Object)
             {
-                return new MapType(new InterfaceType());
+                return new DictionaryTypeGo(new InterfaceType());
             }
             else if (primaryType.KnownPrimaryType == KnownPrimaryType.Date)
             {
@@ -555,7 +555,7 @@ namespace AutoRest.Go
         // Refactor -> CodeModelTransformer
         private IModelType NormalizeDictionaryType(DictionaryType dictionaryType)
         {
-            return new MapType(NormalizeTypeReference(dictionaryType.ValueType));
+            return new DictionaryTypeGo(NormalizeTypeReference(dictionaryType.ValueType));
         }
 
         /// <summary>

@@ -53,7 +53,7 @@ namespace AutoRest.Go.Model
                 .ForEach(mtm =>
                 {
                     mtm.Parameters.ForEach(p => p.AddImports(imports));
-                        if (mtm.HasReturnValue() && !mtm.ReturnValue().Body.IsPrimaryType(KnownPrimaryType.Stream))
+                        if (mtm.HasReturnValue() && !mtm.ReturnValue().Body.PrimaryType(KnownPrimaryType.Stream))
                         {
                             mtm.ReturnType.Body.AddImports(imports);
                         }

@@ -23,6 +23,7 @@ namespace AutoRest.Go.Model
                                                  "The channel will be used to cancel polling and any outstanding HTTP requests.";
 
         public readonly bool NextAlreadyDefined = true;
+        public IEnumerable<ParameterGo> ParameterTemplateModels => Parameters.Cast<ParameterGo>();
 
         public MethodGo(Method source, string owner, string packageName, MethodScopeProvider methodScope, bool next)        
         {
@@ -33,8 +34,12 @@ namespace AutoRest.Go.Model
             PackageName = packageName;
             NextAlreadyDefined = next;
 
-            var parameter = Parameters.ToList().Find(p => p.ModelType.IsPrimaryType(KnownPrimaryType.Stream)
-                                                && !(p.Location == ParameterLocation.Body || p.Location == ParameterLocation.FormData));
+            // var parameter = Parameters.ToList().Find(p => p.ModelType.PrimaryType(KnownPrimaryType.Stream)
+            //                                     && !(p.Location == ParameterLocation.Body || p.Location == ParameterLocation.FormData));
+
+            var parameter = ParameterTemplateModels.ToList().Find(p => p.ModelType.PrimaryType(KnownPrimaryType.Stream)
+                                                    && !(p.Location == ParameterLocation.Body || p.Location == ParameterLocation.FormData));
+
             if (parameter != null)
             {
                 throw new ArgumentException(string.Format(CultureInfo.InvariantCulture,
@@ -279,7 +284,7 @@ namespace AutoRest.Go.Model
             {
                 var decorators = new List<string>();
 
-                if (BodyParameter != null && !BodyParameter.ModelType.IsPrimaryType(KnownPrimaryType.Stream))
+                if (BodyParameter != null && !BodyParameter.ModelType.PrimaryType(KnownPrimaryType.Stream))
                 {
                     decorators.Add("autorest.AsJSON()");
                 }
@@ -294,7 +299,7 @@ namespace AutoRest.Go.Model
 
                 if (BodyParameter != null && BodyParameter.IsRequired)
                 {
-                    decorators.Add(string.Format(BodyParameter.ModelType.IsPrimaryType(KnownPrimaryType.Stream) && BodyParameter.Location == ParameterLocation.Body
+                    decorators.Add(string.Format(BodyParameter.ModelType.PrimaryType(KnownPrimaryType.Stream) && BodyParameter.Location == ParameterLocation.Body
                                         ? "autorest.WithFile({0})"
                                         : "autorest.WithJSON({0})",
                                 BodyParameter.Name));
@@ -308,7 +313,7 @@ namespace AutoRest.Go.Model
                 if (FormDataParameters.Any())
                 {
                     decorators.Add(
-                        FormDataParameters.Any(p => p.ModelType.IsPrimaryType(KnownPrimaryType.Stream))
+                        FormDataParameters.Any(p => p.ModelType.PrimaryType(KnownPrimaryType.Stream))
                             ? "autorest.WithMultiPartFormData(formDataParameters)"
                             : "autorest.WithFormData(autorest.MapToValues(formDataParameters))"
                         );
@@ -356,7 +361,7 @@ namespace AutoRest.Go.Model
 
                 if (!this.IsLongRunningOperation() && this.HasReturnValue() && !this.ReturnValue().Body.IsStreamType())
                 {
-                    if (this.ReturnValue().Body is SyntheticType)
+                    if (this.ReturnValue().Body is CompositeTypeGo)
                     {
                         decorators.Add("autorest.ByUnmarshallingJSON(&result.Value)");
                     }

@@ -38,6 +38,9 @@
     "CSharp": {
       "type": "CSharpCodeGenerator, AutoRest.CSharp"
     },
+    "Go": {
+        "type": "GoCodeGenerator, AutoRest.Go"
+    },
     "NodeJS": {
       "type": "NodeJSCodeGenerator, AutoRest.NodeJS",
       "settings": {

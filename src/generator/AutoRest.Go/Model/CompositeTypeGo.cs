@@ -3,16 +3,15 @@
 
 using System;
 using AutoRest.Core.Model;
-using AutoRest.Go.Model;
 
-namespace AutoRest.Go
+namespace AutoRest.Go.Model
 {
     /// <summary>
     /// Defines a synthesized composite type that wraps a primary type, array, or dictionary method response.
     /// </summary>
-    public class SyntheticType : CompositeType
+    public class CompositeTypeGo : CompositeType
     {
-        public SyntheticType(IModelType baseType)
+        public CompositeTypeGo(IModelType baseType)
         {
             if (!ShouldBeSyntheticType(baseType))
             {
@@ -102,7 +101,7 @@ namespace AutoRest.Go
 
         public static bool IsAllowedPrimitiveType(IModelType type)
         {
-            return !(type is DictionaryType || type is SequenceType || type.IsPrimaryType(KnownPrimaryType.Stream));
+            return !(type is DictionaryType || type is SequenceType || type.PrimaryType(KnownPrimaryType.Stream));
         }
 
         public IModelType getElementType(IModelType type)
@@ -112,10 +111,10 @@ namespace AutoRest.Go
                 Name += "List";
                 return getElementType((type as SequenceType).ElementType);
             }
-            else if (type is MapType)
+            else if (type is DictionaryTypeGo)
             {
                 Name += "Set";
-                return getElementType(((type as MapType).ValueType));
+                return getElementType(((type as DictionaryTypeGo).ValueType));
             }
             else
             {

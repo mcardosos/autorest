@@ -12,13 +12,13 @@ namespace AutoRest.Go
     /// <summary>
     /// Defines a synthetic type used to hold an array or dictionary method response.
     /// </summary>
-    public class MapType : DictionaryType
+    public class DictionaryTypeGo : DictionaryType
     {
         public string FieldNameFormat { get; set; }
 
         public string FieldName { get { return string.Format(CultureInfo.InvariantCulture, FieldNameFormat, ValueType.Name); } }
 
-        public MapType(IModelType type)
+        public DictionaryTypeGo(IModelType type)
         {
             ValueType = type;
             Name.OnGet += value => $"map[string]{0}";
@@ -34,7 +34,7 @@ namespace AutoRest.Go
         /// <returns>true if the specified object is equal to this object; otherwise, false.</returns>
         public override bool Equals(object obj)
         {
-            var mapType = obj as MapType;
+            var mapType = obj as DictionaryTypeGo;
 
             if (mapType != null)
             {

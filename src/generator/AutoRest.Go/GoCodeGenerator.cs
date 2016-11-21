@@ -14,7 +14,7 @@ namespace AutoRest.Go
 {
     public class GoCodeGenerator : CodeGenerator
     {
-        private readonly GoCodeNamer _namingFramework;
+        // private readonly GoCodeNamer _namingFramework;
 
         public GoCodeGenerator()
         {
@@ -48,8 +48,8 @@ namespace AutoRest.Go
         public void NormalizeCodeModel(CodeModel cm)
         {
             // Add the current package name as a reserved keyword
-            _namingFramework.ReserveNamespace(cm.Namespace);
-            _namingFramework.NormalizeCodeModel(cm);
+            // _namingFramework.ReserveNamespace(cm.Namespace);
+            // _namingFramework.NormalizeCodeModel(cm);
             AzureExtensions.ProcessGlobalParameters(cm);
         }
 

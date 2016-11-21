@@ -455,12 +455,12 @@ namespace AutoRest.Go
 
         public static bool IsStreamType(this IModelType body)
         {
-            var r = body as SyntheticType;
-            return r != null && (r.BaseType.IsPrimaryType(KnownPrimaryType.Stream));
+            var r = body as CompositeTypeGo;
+            return r != null && (r.BaseType.PrimaryType(KnownPrimaryType.Stream));
         }
 
 
-        public static bool IsPrimaryType(this IModelType type, KnownPrimaryType typeToMatch)
+        public static bool PrimaryType(this IModelType type, KnownPrimaryType typeToMatch)
         {
             if (type == null)
             {
@@ -546,13 +546,13 @@ namespace AutoRest.Go
 
         public static string GetEmptyCheck(this PrimaryType type, string valueReference, bool asEmpty)
         {
-            if (type.IsPrimaryType(KnownPrimaryType.ByteArray))
+            if (type.PrimaryType(KnownPrimaryType.ByteArray))
             {
                 return string.Format(asEmpty
                                         ? "{0} == nil || len({0}) == 0"
                                         : "{0} != nil && len({0}) > 0", valueReference);
             }
-            else if (type.IsPrimaryType(KnownPrimaryType.String))
+            else if (type.PrimaryType(KnownPrimaryType.String))
             {
                 return string.Format(asEmpty
                                         ? "len({0}) == 0"
@@ -631,7 +631,7 @@ namespace AutoRest.Go
                 }
                 else if (property.ModelType is DictionaryType)
                 {
-                    indented.AppendFormat("{0} *{1} {2}\n", property.Name, (property.ModelType as MapType).FieldName, property.JsonTag());
+                    indented.AppendFormat("{0} *{1} {2}\n", property.Name, (property.ModelType as DictionaryTypeGo).FieldName, property.JsonTag());
                 }
                 else
                 {
@@ -826,7 +826,7 @@ namespace AutoRest.Go
                 {
                     var primary = prop.ModelType as PrimaryType;
                     var sequence = prop.ModelType as SequenceType;
-                    var map = prop.ModelType as MapType;
+                    var map = prop.ModelType as DictionaryTypeGo;
                     var composite = prop.ModelType as CompositeType;
 
                     if (primary != null || sequence != null || map != null)

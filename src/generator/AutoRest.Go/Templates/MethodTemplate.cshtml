@@ -1,9 +1,11 @@
 ﻿@using System.Collections.Generic;
 @using System.Linq;
 @using System.Text;
-
+@using System;
 @using AutoRest.Core.Model
+@using AutoRest.Core.Utilities
 @using AutoRest.Go
+
 @inherits AutoRest.Core.Template<AutoRest.Go.Model.MethodGo>
 
 @{
@@ -17,11 +19,11 @@
             sb.Append(parameter.Documentation.FixedValue.ToSentence());
             sb.Append(" ");
         }
-        if (parameter.ModelType.IsPrimaryType(KnownPrimaryType.Stream))
+        <!--if (parameter.ModelType.PrimaryType(KnownPrimaryType.Stream))
         {
             sb.Append(parameter.Name);
             sb.Append(" will be closed upon successful return. Callers should ensure closure when receiving an error.");
-        }
+        }-->
     }
 
     List<string> pd = Model.PrepareDecorators;

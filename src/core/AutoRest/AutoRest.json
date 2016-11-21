@@ -69,11 +69,11 @@
     "Azure.Python": {
       "type": "AzurePythonCodeGenerator, AutoRest.Python.Azure"
     },
-    "AzureResourceSchema": {
-      "type": "AzureResourceSchemaCodeGenerator, AutoRest.AzureResourceSchema"
-    },
     "Go": {
       "type": "GoCodeGenerator, AutoRest.Go"
+    },
+    "AzureResourceSchema": {
+      "type": "AzureResourceSchemaCodeGenerator, AutoRest.AzureResourceSchema"
     }
   },
   "modelers": {
