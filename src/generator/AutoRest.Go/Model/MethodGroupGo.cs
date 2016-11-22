@@ -22,6 +22,11 @@ namespace AutoRest.Go.Model
         public IEnumerable<string> Imports { get; set; }
         public IEnumerable<MethodGo> MethodTemplateModels => Methods.Cast<MethodGo>();
 
+        public MethodGroupGo(string name): base(name)
+        {
+
+        }
+
         public MethodGroupGo()
         {
             var cm = CodeModel as CodeModelGo;

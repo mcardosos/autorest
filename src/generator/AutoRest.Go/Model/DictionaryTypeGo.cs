@@ -7,7 +7,7 @@ using System.Globalization;
 using AutoRest.Core.Model;
 
 
-namespace AutoRest.Go
+namespace AutoRest.Go.Model
 {
     /// <summary>
     /// Defines a synthetic type used to hold an array or dictionary method response.
@@ -18,9 +18,9 @@ namespace AutoRest.Go
 
         public string FieldName { get { return string.Format(CultureInfo.InvariantCulture, FieldNameFormat, ValueType.Name); } }
 
-        public DictionaryTypeGo(IModelType type)
+        public DictionaryTypeGo()
         {
-            ValueType = type;
+            // ValueType = type;
             Name.OnGet += value => $"map[string]{0}";
             FieldNameFormat = ValueType.CanBeNull()
                                 ? "map[string]{0}"

@@ -8,9 +8,9 @@ namespace AutoRest.Go.Model
 {
     public class PropertyGo : Property
     {
-        public PropertyGo(Property source)
+        public PropertyGo()
         {
-            this.LoadFrom(source);
+            
         }
     }
 }

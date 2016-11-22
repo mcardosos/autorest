@@ -8,7 +8,7 @@ using AutoRest.Core.Model;
 using AutoRest.Core.Utilities;
 
 
-namespace AutoRest.Go
+namespace AutoRest.Go.Model
 {
     /// <summary>
     /// Defines a pseudo-PrimaryType to support Go interface types.
@@ -25,17 +25,17 @@ namespace AutoRest.Go
             return Name;
         }
 
-        public override bool Equals(object obj)
-        {
-            var knownType = obj as InterfaceType;
+        // public override bool Equals(object obj)
+        // {
+        //     var knownType = obj as InterfaceType;
 
-            if (knownType != null)
-            {
-                return knownType.Name == Name;
-            }
+        //     if (knownType != null)
+        //     {
+        //         return knownType.Name == Name;
+        //     }
 
-            return false;
-        }
+        //     return false;
+        // }
 
         public override int GetHashCode()
         {
@@ -58,6 +58,21 @@ namespace AutoRest.Go
         public void Disambiguate()
         {
 
+        }
+
+        public bool StructurallyEquals(IModelType other)
+        {
+            if (ReferenceEquals(other as InterfaceType, null))
+            {
+                return false;
+            }
+
+            if ((other as InterfaceType) != null)
+            {
+                return (other as InterfaceType).Name == Name;
+            }
+
+            return false;
         }
     }
 }

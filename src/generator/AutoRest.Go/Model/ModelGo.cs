@@ -33,7 +33,7 @@ namespace AutoRest.Go.Model
             this.LoadFrom(source);
 
             PropertyGoModels = new List<PropertyGo>();
-            source.Properties.ForEach(p => PropertyGoModels.Add(new PropertyGo(p)));
+            source.Properties.ForEach(p => PropertyGoModels.Add(new PropertyGo()));
         }
 
         // Refactor -> Nobody uses this

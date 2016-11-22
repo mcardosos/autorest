@@ -11,9 +11,9 @@ namespace AutoRest.Go.Model
     {
         public bool HasUniqueNames { get; set; }
         
-        public EnumTypeGo(EnumType source)
+        public EnumTypeGo()
         {
-            this.LoadFrom(source);
+            // this.LoadFrom(source);
 
             // Assume members have unique names
             HasUniqueNames = true;

@@ -303,7 +303,7 @@ namespace AutoRest.Go
                 //Refactor -> CodeModelTransformer
                 if (CompositeTypeGo.ShouldBeSyntheticType(method.ReturnType.Body))
                 {
-                    CompositeTypeGo ctg = new CompositeTypeGo(method.ReturnType.Body);
+                    CompositeTypeGo ctg = new CompositeTypeGo();
                     if (compositeTypes.Contains(ctg))
                     {
                         method.ReturnType = new Response(compositeTypes.Find(i => i.Equals(ctg)), method.ReturnType.Headers);
@@ -459,7 +459,7 @@ namespace AutoRest.Go
         {
             if (primaryType.KnownPrimaryType == KnownPrimaryType.Object)
             {
-                return new DictionaryTypeGo(new InterfaceType());
+                return new DictionaryTypeGo();
             }
             else if (primaryType.KnownPrimaryType == KnownPrimaryType.Date)
             {
@@ -555,7 +555,8 @@ namespace AutoRest.Go
         // Refactor -> CodeModelTransformer
         private IModelType NormalizeDictionaryType(DictionaryType dictionaryType)
         {
-            return new DictionaryTypeGo(NormalizeTypeReference(dictionaryType.ValueType));
+            return dictionaryType as DictionaryTypeGo;
+            // return new DictionaryTypeGo(NormalizeTypeReference(dictionaryType.ValueType));
         }
 
         /// <summary>
@@ -812,6 +813,10 @@ namespace AutoRest.Go
         // Refactor -> Namer
         public static string PackageNameFromNamespace(string ns)
         {
+            if (string.IsNullOrEmpty(ns))
+            {
+                return string.Empty;
+            }
             List<string> namespaceParts = NamespaceParts(ns);
             return namespaceParts[namespaceParts.Count() - 1];
         }

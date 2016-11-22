@@ -8,9 +8,9 @@ namespace AutoRest.Go.Model
 {
     public class ParameterGo : Parameter
     {
-        public ParameterGo(Property source)
+        public ParameterGo()
         {
-            // this.LoadFrom(source);
+
         }
     }
 }

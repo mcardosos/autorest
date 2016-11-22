@@ -23,22 +23,26 @@ namespace AutoRest.Go.Model
                                                  "The channel will be used to cancel polling and any outstanding HTTP requests.";
 
         public readonly bool NextAlreadyDefined = true;
-        public IEnumerable<ParameterGo> ParameterTemplateModels => Parameters.Cast<ParameterGo>();
+        // public IEnumerable<ParameterGo> ParameterTemplateModels => Parameters.Cast<ParameterGo>();
 
-        public MethodGo(Method source, string owner, string packageName, MethodScopeProvider methodScope, bool next)        
+        // public MethodGo(Method source, string owner, string packageName, MethodScopeProvider methodScope, bool next)
+        public MethodGo()        
         {
-            this.LoadFrom(source);
+            var cm = CodeModel as CodeModelGo;
+            // this.LoadFrom(source);
 
-            MethodScope = methodScope;
-            Owner = owner;
-            PackageName = packageName;
-            NextAlreadyDefined = next;
+            // MethodScope = methodScope;
+            MethodScope = new MethodScopeProvider();
+            // Owner = owner; // owner is the client from the method Group
+            Owner = (MethodGroup as MethodGroupGo).ClientName;
+            PackageName = cm.PackageName;
+            NextAlreadyDefined = this.NextMethodExists(cm.Methods);
 
-            // var parameter = Parameters.ToList().Find(p => p.ModelType.PrimaryType(KnownPrimaryType.Stream)
-            //                                     && !(p.Location == ParameterLocation.Body || p.Location == ParameterLocation.FormData));
+            var parameter = Parameters.ToList().Find(p => p.ModelType.PrimaryType(KnownPrimaryType.Stream)
+                                                && !(p.Location == ParameterLocation.Body || p.Location == ParameterLocation.FormData));
 
-            var parameter = ParameterTemplateModels.ToList().Find(p => p.ModelType.PrimaryType(KnownPrimaryType.Stream)
-                                                    && !(p.Location == ParameterLocation.Body || p.Location == ParameterLocation.FormData));
+            // var parameter = ParameterTemplateModels.ToList().Find(p => p.ModelType.PrimaryType(KnownPrimaryType.Stream)
+            //                                         && !(p.Location == ParameterLocation.Body || p.Location == ParameterLocation.FormData));
 
             if (parameter != null)
             {

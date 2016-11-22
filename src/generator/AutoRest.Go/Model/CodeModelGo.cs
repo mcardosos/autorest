@@ -24,7 +24,7 @@ namespace AutoRest.Go.Model
                 {
                     continue;
                 }
-                EnumTemplateModels.Add(new EnumTypeGo(enumType));
+                EnumTemplateModels.Add(new EnumTypeGo());
             }
 
             // And add any others with a defined name and value list (but not already located)
@@ -34,7 +34,7 @@ namespace AutoRest.Go.Model
                         .ForEach(p => {
                             if (!EnumTemplateModels.Any(etm => etm.Equals(p.ModelType)))
                             {
-                                EnumTemplateModels.Add(new EnumTypeGo(p.ModelType as EnumType));
+                                EnumTemplateModels.Add(new EnumTypeGo());
                             }
                         });
                 });
@@ -125,7 +125,7 @@ namespace AutoRest.Go.Model
                                             !string.IsNullOrEmpty(Settings.Instance.PackageVersion)
                                                     ? Settings.Instance.PackageVersion
                                                     : "0.0.0");
-        public string PackageName => GoCodeNamer.PackageNameFromNamespace(Namespace) == null
+        public string PackageName => string.IsNullOrEmpty(GoCodeNamer.PackageNameFromNamespace(Namespace))
                             ? string.Empty
                             : GoCodeNamer.PackageNameFromNamespace(Namespace);
 

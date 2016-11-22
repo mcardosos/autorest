@@ -11,17 +11,21 @@ namespace AutoRest.Go.Model
     /// </summary>
     public class CompositeTypeGo : CompositeType
     {
-        public CompositeTypeGo(IModelType baseType)
+        public CompositeTypeGo(string name) : base(name)
         {
-            if (!ShouldBeSyntheticType(baseType))
+
+        }
+        public CompositeTypeGo()
+        {
+            if (!ShouldBeSyntheticType(BaseModelType))
             {
-                throw new ArgumentException("{0} is not a valid type for SyntheticType", baseType.ToString());
+                throw new ArgumentException("{0} is not a valid type for SyntheticType", BaseModelType.ToString());
             }
 
             // gosdk: Ensure the generated name does not collide with existing type names
-            BaseType = baseType;
+            BaseType = BaseModelType;
 
-            IModelType elementType = getElementType(baseType);
+            IModelType elementType = getElementType(BaseModelType);
 
             if (elementType is PrimaryType)
             {

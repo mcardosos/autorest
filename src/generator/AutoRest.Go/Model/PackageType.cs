@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using AutoRest.Core.Model;
 using AutoRest.Core.Utilities;
 
-namespace AutoRest.Go
+namespace AutoRest.Go.Model
 {
     /// <summary>
     /// Defines type defined by a Go package.
@@ -65,17 +65,17 @@ namespace AutoRest.Go
         /// </summary>
         /// <param name="obj">The object to compare with this object.</param>
         /// <returns>true if the specified object is equal to this object; otherwise, false.</returns>
-        public override bool Equals(object obj)
-        {
-            var knownType = obj as PackageType;
+        // public override bool Equals(object obj)
+        // {
+        //     var knownType = obj as PackageType;
 
-            if (knownType != null)
-            {
-                return knownType.Import == Import && knownType.Member == Member;
-            }
+        //     if (knownType != null)
+        //     {
+        //         return knownType.Import == Import && knownType.Member == Member;
+        //     }
 
-            return false;
-        }
+        //     return false;
+        // }
 
         /// <summary>
         /// Serves as a hash function based on Type.
@@ -101,6 +101,15 @@ namespace AutoRest.Go
         public HashSet<string> LocallyUsedNames { get; }
         public string QualifierType { get; }
         public string DeclarationName { get; }
+        public bool StructurallyEquals(IModelType other)
+        {
+            if (ReferenceEquals(other as PackageType, null)){                
+                return false;
+            }
+
+            return (other as PackageType).Import == Import && (other as PackageType).Member == Member;
+
+        }
         public void Disambiguate()
         {
 
