@@ -811,17 +811,40 @@ namespace AutoRest.Go
                     var composite = prop.Type as CompositeType;
 
                     if (primary != null || sequence != null || map != null)
-                        x.AddRange(prop.ValidateType($"{name}.{prop.Name}", method, true));
+                    {    
+                        if (prop.ShouldBeFlattened())
+                        {
+                            x.AddRange(prop.ValidateType($"{name}.{prop.Type.Name}", method, true));
+                        }
+                        else
+                        {
+                            x.AddRange(prop.ValidateType($"{name}.{prop.Name}", method, true));
+                        }
+                    }
                     else if (composite != null)
                     {
                         if (ancestors.Contains(composite.Name))
                         {
-                            x.AddNullValidation($"{name}.{prop.Name}", p.IsRequired);
+                            if (prop.ShouldBeFlattened())
+                            {
+                                x.AddNullValidation($"{name}.{prop.Type.Name}", p.IsRequired);
+                            }
+                            else
+                            {
+                                x.AddNullValidation($"{name}.{prop.Name}", p.IsRequired);
+                            }                            
                         }
                         else
                         {
                             ancestors.Add(composite.Name);
-                            x.AddRange(prop.ValidateCompositeType($"{name}.{prop.Name}", method, ancestors, true));
+                            if (prop.ShouldBeFlattened())
+                            {
+                                x.AddRange(prop.ValidateCompositeType($"{name}.{prop.Type.Name}", method, ancestors, true));
+                            }
+                            else
+                            {
+                                x.AddRange(prop.ValidateCompositeType($"{name}.{prop.Name}", method, ancestors, true));
+                            }                            
                             ancestors.Remove(composite.Name);
                         }  
                     }   
@@ -829,7 +852,11 @@ namespace AutoRest.Go
             }
 
             x.AddRange(from prop in ((CompositeType)p.Type).Properties
-                       where prop.IsReadOnly
+                       where prop.IsReadOnly && prop.ShouldBeFlattened()
+                       select GetConstraint($"{name}.{prop.Type.Name}", ReadOnlyConstraint, "true"));
+
+            x.AddRange(from prop in ((CompositeType)p.Type).Properties
+                       where prop.IsReadOnly && !prop.ShouldBeFlattened()
                        select GetConstraint($"{name}.{prop.Name}", ReadOnlyConstraint, "true"));
 
             List<string> y = new List<string>();
