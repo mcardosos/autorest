@@ -57,7 +57,7 @@ autorest --input-file=myfile.json --output-folder=./generated/code/ --namespace=
 |`--license-header=HEADER`| Text to include as a header comment in generated files. Use NONE to suppress the default header.|
 |`--add-credentials`|If specified, the generated client includes a ServiceClientCredentials property and constructor parameter. Authentication behaviors are implemented by extending the ServiceClientCredentials type.|
 |`--package-name=PACKAGENAME`|Name of the package (Ruby, Python)|
-|`--package-version=VERSION`|Version of the package (Ruby, Python)|
+|`--package-version=VERSION`|Version of the package (Ruby, Python, Go)|
 |`--sync-methods=all\|essential\|none`|Specifies mode for generating sync wrappers. Supported value are <br>&nbsp;&nbsp;`essential` - generates only one sync returning body or header (default) <br>&nbsp;&nbsp;`all` - generates one sync method for each async method<br>&nbsp;&nbsp;`none` - does not generate any sync methods|
 |`--payload-flattening-threshold=NUMBER`|The maximum number of properties in the request body. If the number of properties in the request body is less than or equal to this value, these properties will be represented as method arguments|
 |`--override-client-name=NAME`|Name to use for the generated client type. By default, uses the value of the 'Title' field from the input files|
